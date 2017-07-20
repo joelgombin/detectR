@@ -1,0 +1,187 @@
+---
+title: "Détecteur de lecteur inattendu"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+  runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+
+```{r global}
+library(tidyverse)
+library(lubridate)
+# TODO : aller récupérer les données directement dans solr
+load("./data/input.RData")
+load("./data/output.RData")
+piwik <- read_csv("./data/PiwikExport_PageURLs_January2_March2_2017.csv")
+livres <- read_csv("http://www.openedition.org/index.html?page=coverage&pubtype=livre&export=csv")
+revues <- read_csv("http://www.openedition.org/index.html?page=coverage&pubtype=revue&export=csv")
+carnets <- read_csv("http://www.openedition.org/index.html?page=coverage&pubtype=carnet&export=csv")
+livres <- livres %>%
+  mutate(Title = stringr::str_replace_all(Title, "'|’", "'"))
+revues <- revues %>%
+    mutate(Title = stringr::str_replace_all(Title, "'|’", "'"))
+carnets <- carnets %>%
+    mutate(Title = stringr::str_replace_all(Title, "'|’", "'"))
+```
+
+
+
+
+Sidebar {.sidebar}
+=====================================
+
+```{r}
+selectInput("plateforme", label = "Choisir la plateforme", choices = c("Hypothèses.org" = "carnets", "Revues.org" = "revues", "OpenEdition Books" = "livres"), multiple = FALSE, selected = "carnets")
+
+checkboxInput("checkPublication", label = "Sélectionner un espace de publication ?", value = FALSE)
+
+conditionalPanel(
+  condition = "input.checkPublication == true",
+  selectInput("publication", label = "Choisir un espace de publication", selectize = TRUE, choices = c(""))
+)
+# selectInput("publication", label = "Choisir un espace de publication", selectize = TRUE, choices = c(""))
+observe({
+  choix <- NULL
+  print(input$plateforme)
+  if (!is.null(input$plateforme)) {
+    if (input$plateforme %in% "carnets") {
+      choix <- carnets[["Title"]]
+    } else if (input$plateforme %in% "revues") {
+      choix <- revues[["Title"]]
+    } else if (input$plateforme %in% "livres") {
+      choix <- livres[["Title"]]
+    }
+    choix <- c("Choisir un espace de publication" = "", choix)
+  #   print(str(choix))
+    updateSelectInput(session, inputId = "publication", choices = choix, selected = NULL)
+  }
+})
+
+sliderInput("sensitivite", label = "Seuil de sensitivité", min = 0, max = 250, value = 150, step = 10)
+
+```
+
+
+Non expert
+=========
+
+
+Column {data-width=30%}
+-----------------------------------------------------------------------
+
+### Le top 100
+
+```{r}
+library(DT)
+DT::dataTableOutput("top100")
+
+output$top100 <- DT::renderDataTable(tibble(Titre = c("Le vrai doc", "Deuxième titre"), Auteur= c("Marin", "Elodie"), Visites = c(1000, 500)))
+```
+
+Column {data-width=70%}
+-----------------------------------------------------------------------
+
+### La courbe
+
+```{r}
+
+# library(dygraphs)
+#
+# dygraphOutput("dygraph")
+
+library(highcharter)
+
+highchartOutput("timeplot")
+
+visites <- reactive({
+  xts::xts(counts$countconsult, counts$timestamp)
+})
+
+piwik_ts <- reactive({
+  xts::xts(piwik$`Unique Pageviews`, piwik$Date)
+})
+
+anomalies_ts <- reactive({
+  tmp <- piwik %>% filter(`Unique Pageviews` > input$sensitivite)
+  tmp <- tmp %>%
+    mutate(title = "!",
+           text = "Un lecteur inattendu ?")
+})
+
+bandes <- reactive({
+  anomalies_ts() %>%
+    mutate(limite_avant = Date) %>%
+    mutate(limite_apres = Date) %>%
+    # mutate(diff = as.duration(Date %--% lag(Date))) %>%
+    mutate(limite_avant = if_else(as.duration(lag(Date) %--% Date) > ddays(1), as.Date(Date), lag(limite_avant), missing = Date)) %>%
+    mutate(limite_apres = if_else(as.duration(Date %--% lead(Date)) > ddays(1), as.Date(Date), lag(limite_apres), missing = Date)) %>%
+    select(Date, limite_avant, limite_apres) %>%
+    distinct(limite_avant, limite_apres)
+})
+
+# plotbands <- reactive({
+# tmp <-  bandes() %>%
+#     by_row(..f = function(row) {
+#       from <- paste0("Date.UTC(", year(row[["limite_avant"]]), ",", month(row[["limite_avant"]]) - 1, ",", day(row[["limite_avant"]]), ")")
+#       to <- paste0("Date.UTC(", year(row[["limite_apres"]]), ",", month(row[["limite_apres"]]) - 1, ",", day(row[["limite_apres"]]), ")")
+#       list(from = htmlwidgets::JS(from),
+#            to = htmlwidgets::JS(to),
+#            color = "rgba(100, 0, 0, 0.1)")
+#       }
+#       )
+# tmp$.out
+# })
+
+plotbands <- reactive({
+tmp <-  bandes() %>%
+    by_row(..f = function(row) {
+      from <- datetime_to_timestamp(row[["limite_avant"]])
+      to <- datetime_to_timestamp(row[["limite_apres"]])
+      list(from = from,
+           to = to,
+           color = "rgba(100, 0, 0, 0.1)")
+      }
+    )
+tmp$.out
+})
+
+output$timeplot <- renderHighchart({
+print(plotbands())
+  highchart(type = "stock") %>%
+    hc_add_series(piwik_ts(), id = "piwik") %>%
+    hc_add_series(anomalies_ts(), hcaes(x = Date), type = "flags", onSeries = "piwik")  %>%
+    hc_xAxis(plotBands = plotbands())
+})
+
+# output$dygraph <- renderDygraph({
+#   dygraph(visites(), main = "Visites") %>%
+#     dySeries(label = "visites", color = "black") %>%
+#     dyRoller(rollPeriod = 10) %>%
+#     dyRangeSelector() # %>%
+#     # dyShading(from = "1920-1-1", to = "1930-1-1", color = "#FFE6E6") %>%
+#     # dyShading(from = "1940-1-1", to = "1950-1-1", color = "#CCEBD6")
+# })
+```
+
+
+
+### Spécificité de la répartition des lecteurs
+
+```{r}
+library(leaflet)
+leaflet() %>%
+  addTiles()
+```
+
+### Spécificité des referrers
+
+```{r}
+hchart(diamonds$cut, type = "column")
+```
+
