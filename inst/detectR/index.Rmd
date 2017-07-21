@@ -15,6 +15,7 @@ library(flexdashboard)
 ```{r global}
 library(tidyverse)
 library(lubridate)
+library(detectR)  # for now, built locally
 # TODO : aller récupérer les données directement dans solr
 load("./data/input.RData")
 load("./data/output.RData")
