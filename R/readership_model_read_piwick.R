@@ -51,16 +51,19 @@ complete_time <- function(aggregated_frequent) {
 #'  - The original data
 #'  - The dataset of "frequent" visits (with number of days higher than threshold) to be used on standard modeling with rms
 #'  - The dataset of urls with "seldom" visits (with number of days lower than threshold) to be used on Markov analysis, as the data entries are to low to allow for standard modeling.
-
+#' @export
+#' @import tidyverse lubridate
 get_aggregated_piwick <- function(aggregated_piwick_file, absolute_days=10, relative_days=0.9) {
 
   #We initialize a logs_datasets class
-  setOldClass(c("tbl_df", "tbl", "data.frame"))
+#  setOldClass(c("tbl_df", "tbl", "data.frame"))
 
-  logs_datasets <- setClass("logs_datasets", slots = c(aggregated_complete="tbl_df", aggregated_frequent="tbl_df", aggregated_seldom="tbl_df"))
+#  logs_datasets <- setClass("logs_datasets", slots = c(aggregated_complete="tbl_df", aggregated_frequent="tbl_df", aggregated_seldom="tbl_df"))
 
   #We open the cleaned file containing all the logs
-  aggregated_piwick <- read_csv2(aggregated_piwick_file) %>% rename(nb_visits = log_count) %>% select(-X1)
+  aggregated_piwick <- read_csv2(aggregated_piwick_file) %>%
+    rename(nb_visits = log_count) %>%
+    select(-X1)
 
   #We get the max date recorded in the full dataset (for every urls).
   max_absolute_date <- ymd(max(aggregated_piwick$date))
@@ -91,10 +94,11 @@ get_aggregated_piwick <- function(aggregated_piwick_file, absolute_days=10, rela
     left_join(aggregated_piwick_visits_frequent)
 
   aggregated_piwick_visits_frequent <- aggregated_piwick_visits_frequent %>%
-    mutate(diff_days = as.numeric(date - min_date)+1) %>%
+    mutate(diff_days = as.numeric(date - min_date) + 1) %>%
     filter(diff_days >= 1)
 
-  logs_board <- logs_datasets(aggregated_complete=aggregated_piwick, aggregated_frequent = aggregated_piwick_visits_frequent, aggregated_seldom = aggregated_piwick_visits_seldom)
+  logs_board <- list(aggregated_complete = aggregated_piwick, aggregated_frequent = aggregated_piwick_visits_frequent, aggregated_seldom = aggregated_piwick_visits_seldom)
+  class(logs_board) <- "logs_dataset"
 
   return(logs_board)
 }

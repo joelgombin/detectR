@@ -9,7 +9,7 @@ get_rcs_group <- function(diff_days, log_value_estimated, knots){
 }
 
 #' Extract the anomalies for each group (i. e. each point beyond confidence interval)
-#' @import tidyverse rms broom
+#' @import tidyverse rms broom Hmisc
 #' @export
 get_rcs_anomalies <- function(fit, log_value_estimated, diff_days, knots) {
   appd <- data_frame(diff_days, log_value_estimated)
@@ -27,8 +27,8 @@ get_rcs_anomalies <- function(fit, log_value_estimated, diff_days, knots) {
 #' @export
 detection_anomalies_rcs <- function(sample_complete, knots=3){
 
-  setOldClass(c("tbl_df", "tbl", "data.frame"))
-  anomalies_board <- setClass("anomalies_board", slots = c(url_prediction="tbl_df", model_register="tbl_df", url_prediction_anomalies="tbl_df", url_prediction_count="tbl_df"))
+  # setOldClass(c("tbl_df", "tbl", "data.frame"))
+  # anomalies_board <- setClass("anomalies_board", slots = c(url_prediction="tbl_df", model_register="tbl_df", url_prediction_anomalies="tbl_df", url_prediction_count="tbl_df"))
 
   message("calculating the rcs models")
 
@@ -48,7 +48,8 @@ detection_anomalies_rcs <- function(sample_complete, knots=3){
     unnest(predictions) %>%
     ungroup()
 
-  url_prediction_anomalies <- url_prediction %>% filter(log_value_estimated>upr)
+  url_prediction_anomalies <- url_prediction %>%
+    filter(log_value_estimated>upr)
 
   url_prediction_count <- url_prediction_anomalies %>%
     group_by(url) %>%
@@ -56,7 +57,11 @@ detection_anomalies_rcs <- function(sample_complete, knots=3){
     arrange(desc(anomalies)) %>%
     ungroup()
 
-  anomalies_dataset <- anomalies_board(url_prediction=url_prediction, model_register=model_register, url_prediction_anomalies=url_prediction_anomalies, url_prediction_count=url_prediction_count)
+  anomalies_dataset <- list(url_prediction = url_prediction,
+                            model_register = model_register,
+                            url_prediction_anomalies = url_prediction_anomalies,
+                            url_prediction_count = url_prediction_count)
+  class(anomalies_dataset) <- "anomalies_board"
 
   return(anomalies_dataset)
 }
@@ -65,7 +70,7 @@ detection_anomalies_rcs <- function(sample_complete, knots=3){
 #' @import tidyverse rms broom
 #' @export
 graph_anomalies_rcs <- function(anomalies_dataset, article, show_sigma=FALSE){
-  article_prediction <- anomalies_dataset@url_prediction %>%
+  article_prediction <- anomalies_dataset$url_prediction %>%
     filter(url == article)
   article_prediction <- article_prediction %>%
     mutate(anomaly_detection = ifelse(log_value_estimated > upr, "excess", "normal")) %>%
@@ -88,6 +93,6 @@ graph_anomalies_rcs <- function(anomalies_dataset, article, show_sigma=FALSE){
       labs(title = article, x="Jours", y="Visites") +
       guides(color=FALSE)
   }
-  show(compare_graph)
+  compare_graph
 }
 
