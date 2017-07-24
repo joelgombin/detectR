@@ -2,6 +2,7 @@
 title: "Détecteur de lecteur inattendu"
 output:
   flexdashboard::flex_dashboard:
+    storyboard: true
     orientation: columns
     vertical_layout: fill
   runtime: shiny
@@ -9,18 +10,31 @@ output:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
+library(shiny)
 ```
 
 
 ```{r global}
-library(tidyverse)
 library(lubridate)
 library(detectR)  # for now, built locally
+library(tidyverse)
 # TODO : aller récupérer les données directement dans solr
-load("./data/input.RData")
-load("./data/output.RData")
-piwik <- read_csv("./data/PiwikExport_PageURLs_January2_March2_2017.csv")
-livres <- read_csv("http://www.openedition.org/index.html?page=coverage&pubtype=livre&export=csv")
+load(file = "./data/anomaly_detection.Rdata")
+# piwik <- read_csv("./data/PiwikExport_PageURLs_January2_March2_2017.csv")
+livres <- read_csv("http://www.openedition.org/index.html?page=coverage&pubtype=livre&export=csv", 
+                   col_types = cols(
+  Title = col_character(),
+  `ISBN (print format)` = col_character(),
+  `ISBN (electronic format)` = col_character(),
+  `Electronic Publication Date` = col_date(format = ""),
+  Url = col_character(),
+  Authors = col_character(),
+  Publisher = col_character(),
+  `Print Publication Date (Year)` = col_integer(),
+  Abstract = col_character(),
+  `Access policy` = col_character(),
+  `Main language (ISO 639-1)` = col_character()
+))
 revues <- read_csv("http://www.openedition.org/index.html?page=coverage&pubtype=revue&export=csv")
 carnets <- read_csv("http://www.openedition.org/index.html?page=coverage&pubtype=carnet&export=csv")
 livres <- livres %>%
@@ -38,7 +52,36 @@ Sidebar {.sidebar}
 =====================================
 
 ```{r}
-selectInput("plateforme", label = "Choisir la plateforme", choices = c("Hypothèses.org" = "carnets", "Revues.org" = "revues", "OpenEdition Books" = "livres"), multiple = FALSE, selected = "carnets")
+selectInput("plateforme", label = "Choisir la plateforme", choices = c("Hypothèses.org" = "carnets", "Revues.org" = "revues", "OpenEdition Books" = "livres"), multiple = TRUE, selected = "carnets")
+
+  # tags$button(
+  #         id = "carnets",
+  #         class = "btn action_button",
+  #         tags$img(src = "./www/img/hypotheses_baselineEN.png",
+  #                  width = "50px",
+  #                  `background-color` = "#ffffff")
+  #       )
+  #   tags$button(
+  #         id = "revues",
+  #         class = "btn action_button",
+  #         tags$img(src = "./www/img/logo_revues.png",
+  #                  width = "50px",
+  #                  `background-color` = "#ffffff")
+  #       )
+  # tags$button(
+  #         id = "books",
+  #         class = "btn action_button",
+  #         tags$img(src = "./www/img/logo-oeb.png",
+  #                  width = "50px",
+  #                  `background-color` = "#ffffff")
+  #       )
+  # tags$button(
+  #         id = "calenda",
+  #         class = "btn action_button",
+  #         tags$img(src = "./www/img/calenda.png",
+  #                  width = "50px",
+  #                  style="background-color:white")
+  #       )
 
 checkboxInput("checkPublication", label = "Sélectionner un espace de publication ?", value = FALSE)
 

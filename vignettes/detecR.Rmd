@@ -4,7 +4,7 @@ author: "Pierre-Carl Langlais, Joël Gombin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Using DetectR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,6 +22,7 @@ library("detectR")
 ```
 
 First we clean up the piwick logs. Two variables allow to filter the dataset more effectively:
+
 - The minimum number of absolute days of recorded logs for each url (in order to get a working model)
 - The relative number of recording days viz. the first time the url appears in the logs (which may reflect its publication date)
 
