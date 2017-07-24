@@ -9,6 +9,12 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r config, echo=FALSE}
+library("knitr")
+opts_chunk$set(cache=TRUE)
+```
+
+
 ```{r load}
 library("tidyverse")
 library("lubridate")
@@ -20,7 +26,7 @@ First we clean up the piwick logs. Two variables allow to filter the dataset mor
 - The relative number of recording days viz. the first time the url appears in the logs (which may reflect its publication date)
 
 ```{r}
-logs_board <- get_aggregated_piwick("complete_log_clean.csv", absolute_days=20, relative_days=0.9)
+logs_board <- get_aggregated_piwick("../../../../atelier-data/complete_log_clean.csv", absolute_days=20, relative_days=0.9)
 ```
 
 Then we get the main variable of time variability, which includes seasonal (weekly) variation, general trend on revues.org.
@@ -32,22 +38,22 @@ times_decomposition_board <- get_calendar_time_series(logs_board)
 
 We compensate the recorded view with the time variability variables.
 ```{r}
-logs_board@aggregated_frequent <- correct_time_series(logs_board@aggregated_frequent, times_decomposition_board)
+logs_board$aggregated_frequent <- correct_time_series(logs_board$aggregated_frequent, times_decomposition_board)
 ```
 
 We proceed with anomaly detection, using a restricted cubic spline with 3 knots.
 
-```{r}
-anomaly_detection <- detection_anomalies_rcs(logs_board@aggregated_frequent)
+```{r, warning=FALSE}
+anomaly_detection <- detection_anomalies_rcs(logs_board$aggregated_frequent)
 ```
 
 We can get a graph of the anomalies for one article
 
-```{r}
+```{r, fig.width=5}
 graph_anomalies_rcs(anomaly_detection, "mots.revues.org/21665")
 ```
 
 It is also possible to get the same with adjusted size for sigma ratio for each anomaly (ie to what extent does it affect the variable)
-```{r}
+```{r, fig.width=5}
 graph_anomalies_rcs(anomaly_detection, "asiecentrale.revues.org/488", show_sigma = TRUE)
 ```
