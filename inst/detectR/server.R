@@ -39,4 +39,8 @@ shinyServer(function(input, output, session) {
                          selected = publications_selected(),
                          server = TRUE)
   })
+
+  output$urls <- DT::renderDataTable({
+    unique(anomaly_detection$model_register$url)
+  })
 })

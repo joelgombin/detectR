@@ -1,4 +1,7 @@
 library(urltools)
+library(solrium)
+solr_connect('http://147.94.102.65:8983/solr/documents/select')
+
 library(tidyverse)
 livres <- read_csv("http://www.openedition.org/index.html?page=coverage&pubtype=livre&export=csv",
                    col_types = cols(
@@ -39,4 +42,5 @@ urls <- anomaly_detection$url_prediction_anomalies %>%
   slice(1) %>%
   ungroup %>%
   arrange(-fit_sigma_ratio)
+
 
