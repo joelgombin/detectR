@@ -18,9 +18,11 @@ shinyServer(function(input, output, session) {
           filter(site_url %in% input$publications),
         by = c("url" = "id")
       ) %>% 
-      select(platform, site_url, naked_titre, url, fit_sigma_ratio) %>% 
+      left_join(publications, by = c("site_url", "platform")) %>% 
+      select(platform, site_titre, naked_titre, url, fit_sigma_ratio) %>% 
       arrange(desc(fit_sigma_ratio)) %>% 
-      mutate(fit_sigma_ratio = round(fit_sigma_ratio))
+      mutate(fit_sigma_ratio = round(fit_sigma_ratio)) %>% 
+      rename(Plateforme = platform, Publication = site_titre, Document = naked_titre, URL = url, intensité = fit_sigma_ratio)
   },
   server = TRUE,
   selection = "single")
