@@ -1,3 +1,4 @@
+library(shinyWidgets)
 library(urltools)
 library(solrium)
 library(memoise)
