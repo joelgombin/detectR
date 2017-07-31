@@ -52,3 +52,19 @@ names(publis$Revues) <- publications %>%
 names(publis$Books) <- publications %>% 
   filter(platform %in% "OpenEdition Books") %>% 
   pull(site_titre)
+
+
+## logs bruts 
+
+logs <- read_csv("./data/complete_log_clean.csv", col_names = c("ID", "url", "year_day", "log_count", "date"), 
+                 col_types = cols_only("ID" = col_integer(), 
+                                  "url" = col_character(), 
+                                  "year_day" = col_integer(), 
+                                  "log_count" = col_integer(), 
+                                  "date" = col_date())
+                 )
+logs <- logs %>% 
+  mutate(url = paste0("http://", url)) %>% 
+  select(-ID)
+  
+
