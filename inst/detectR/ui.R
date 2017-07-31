@@ -1,6 +1,8 @@
+
+
 shinyUI(
   fluidPage(title = "Bienvenue dans le détecteur de lecteurs inattendus !",
-            theme = "bootstrap.min.css",
+#            theme = "bootstrap.min.css",
 #    titlePanel("Bienvenue dans le détecteur de lecteurs inattendus !"),
     fluidRow(
       h1("Bienvenue dans le détecteur de lecteurs inattendus !", style = "text-align:center")
@@ -14,33 +16,43 @@ shinyUI(
       column(3,
              tags$h2("Plateformes :"),
              br(),
-             shinyBS::bsButton("hypotheses",
-                               "hypotheses.org",
-                               icon("rss-square",
-                                    class = "fa-fw",
-                                    lib = "font-awesome"),
-                               size = "large",
-                               type = "toggle",
-                               block = TRUE,
-                               value = FALSE),
-             shinyBS::bsButton("revues",
-                               "revues.org",
-                               icon("newspaper-o",
-                                    class = "fa-fw",
-                                    lib = "font-awesome"),
-                               size = "large",
-                               type = "toggle",
-                               block = TRUE,
-                               value = FALSE),
-             shinyBS::bsButton("books",
-                               "books.openedition.org",
-                               icon("book",
-                                    class = "fa-fw",
-                                    lib = "font-awesome"),
-                               size = "large",
-                               type = "toggle",
-                               block = TRUE,
-                               value = FALSE)),
+             # shinyBS::bsButton("hypotheses",
+             #                   "hypotheses.org",
+             #                   icon("rss-square",
+             #                        class = "fa-fw",
+             #                        lib = "font-awesome"),
+             #                   size = "large",
+             #                   type = "toggle",
+             #                   block = TRUE,
+             #                   value = FALSE),
+             # shinyBS::bsButton("revues",
+             #                   "revues.org",
+             #                   icon("newspaper-o",
+             #                        class = "fa-fw",
+             #                        lib = "font-awesome"),
+             #                   size = "large",
+             #                   type = "toggle",
+             #                   block = TRUE,
+             #                   value = TRUE),
+             # shinyBS::bsButton("books",
+             #                   "books.openedition.org",
+             #                   icon("book",
+             #                        class = "fa-fw",
+             #                        lib = "font-awesome"),
+             #                   size = "large",
+             #                   type = "toggle",
+             #                   block = TRUE,
+             #                    value = FALSE)),
+      checkboxInput("hypotheses",
+                    "Hypothèses",
+                    value = TRUE),
+      checkboxInput("revues",
+                    "Revues.org",
+                    value = TRUE),
+      checkboxInput("books",
+                    "OpenEdition Books",
+                    value = TRUE)
+      ),
       column(1),
       column(3,
              tags$h2("Publications :"),
@@ -48,23 +60,10 @@ shinyUI(
                  selectizeInput(
                    "publications",
                    NULL,
-                   NULL,
+                   choices = publis,
                    multiple = TRUE,
                    options = list(
                      placeholder = "Choisir un ou plusieurs espaces de publications :"
-    #                  optgroups = list(
-    #                    list(value = "hypotheses", label = "hypotheses.org"),
-    #                    list(value = "revues", label = "revues.org"),
-    #                    list(value = "books", label = "books.openedition.org")
-    #                  ),
-    #                  optgroupField = 'plateforme',
-    #                  optgroupOrder = c("hypotheses", "revues", "books"),
-    #                  searchField = c("Title", "url"),
-    #                  render = I("{
-    #   option: function(item, escape) {
-    #     return '<div>' + escape(item.Title + '</div>');
-    #   }
-    # }")
                    )
                  )
       ),
