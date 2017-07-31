@@ -6,20 +6,32 @@ output:
 params:
   periode_start: !r as.Date("2017-01-01")
   periode_end: !r Sys.Date()
-  url: NULL
+  url: http://chrhc.revues.org/1907
+  platform: 3
+  
   
   
 ---
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
+library(tidyverse)
 ```
 
 ```{r global}
+source("./fonctions.R")
 ```
 
 
 ### Combien de lecteurs inattendus ?
+
+```{r}
+
+getPageUrl(params$url, idSite = params$platform, period = "day", date = paste0(params$periode_start, ",", params$periode_end))
+
+```
+
+
 
 ### Que sait-on du document concerné ?
 
