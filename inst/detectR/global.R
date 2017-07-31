@@ -13,6 +13,8 @@ m_solr_search <- memoise(solr_search, cache = fc)
 publications <- m_solr_facet(q = "*:*", facet.pivot = c("platform", "site_url", "site_titre"), facet.limit = -1)$facet_pivot$`platform,site_url,site_titre` %>% unnest()
 
 load("./data/anomaly_detection.Rdata")
+anomaly_detection$url_prediction_anomalies <- anomaly_detection$url_prediction_anomalies %>% 
+  mutate(url = paste0("http://", url))
 
 load_urls <- function() {
   urls <- anomaly_detection$url_prediction_anomalies %>%
