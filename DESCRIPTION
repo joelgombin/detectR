@@ -5,7 +5,7 @@ Authors@R: c(person("Pierre-Carl", "Langlais", email = "pierrecarl.langlais@gmai
              person("Joël", "Gombin", email = "joel.gombin@gmail.com", role = "aut"),
              person("OpenEdition", role = "cph"))
 Description: Ce package fournit des fonctions pour détecter, dans un corpus de statistiques de de fréquentation de documents, des pics inattendus de visites. 
-Depends: R (>= 3.4.1)
+Depends: R (>= 3.3.0)
 Imports: tidyverse, 
     rms, 
     broom, 
