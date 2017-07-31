@@ -10,7 +10,7 @@ shinyServer(function(input, output, session) {
                            choices = publis[c(input$hypotheses, input$revues, input$books)],
                            selected = input$publications)
   })
-  
+
   output$urls <- DT::renderDataTable({
     anomaly_detection$url_prediction_anomalies %>% 
       right_join(
@@ -24,5 +24,5 @@ shinyServer(function(input, output, session) {
   },
   server = TRUE,
   selection = "single")
-  
+
 })
