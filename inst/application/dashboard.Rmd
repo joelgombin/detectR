@@ -3,9 +3,10 @@ title: "Détecteur de lecteur inattendu"
 output:
   flexdashboard::flex_dashboard:
     storyboard: true
+    self_contained: false
 params:
-  periode_start: !r as.Date("2017-01-01")
-  periode_end: !r Sys.Date()
+  periode_start: !r lubridate::ymd("2017-01-01")
+  periode_end: !r lubridate::ymd(Sys.Date())
   url: http://chrhc.revues.org/1907
 
   
@@ -17,23 +18,28 @@ library(flexdashboard)
 library(highcharter)
 library(memoise)
 library(detectR)
-library(dplyr)
+library(httr)
+library(tidyverse)
 ```
 
-```{r memoise}
-m_get_visits <- memoise(get_visits, cache = fc)
-```
 
 
 ### Combien de lecteurs inattendus ?
 
 ```{r}
 
-df_visites <- m_get_visits(params$url, 
-           from = params$periode_start,
-           to = params$periode_end,
-           backend = tbl_all_actions)
+df_visites <- GET(paste0("http://localhost:6666/get_visits?visited_url=", params$url, "&from=", params$periode_start, "&to=", params$periode_end)) %>% 
+  content(as = "text") %>% 
+  jsonlite::fromJSON() %>% 
+  as_tibble()
+df_visites$date <- lubridate::ymd(df_visites$date)
 df_visites <- xts::xts(df_visites$n, order.by = df_visites$date)
+
+# df_visites <- m_get_visits(df()[input$episode_rows_selected, "URL"], 
+#                                  from = ymd(format(input$date[1])),
+#                                  to = ymd(format(input$date[2])),
+#                                  backend = tbl_all_actions)
+#       
 
 df_anomalies <- anomalies %>% 
   filter(url %in% params$url) %>% 

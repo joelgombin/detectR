@@ -1,10 +1,17 @@
+library(shiny)
 library(shinyjs)
+library(shinyWidgets)
 library(urltools)
 library(solrium)
 library(memoise)
 library(detectR)
+library(lubridate)
+library(future)
+plan(multiprocess)
 library(tidyverse)
 solr_connect('http://147.94.102.65:8983/solr/documents/select')
+
+enableBookmarking(store = "server")
 
 fc <- cache_filesystem("~/.Rcache")
 # memoisation of the solr call. Reset it every day.
@@ -61,7 +68,16 @@ names(publis$Books) <- publications %>%
 
 
 ## logs  
-library(DBI)
-library(MonetDBLite)
-monetdb_con <- dbConnect(MonetDBLite::monetdblite(), "/data/monetdb")
-tbl_all_actions <- tbl(monetdb_con, "all_actions")
+# library(DBI)
+# library(MonetDBLite)
+# monetdb_con <- dbConnect(MonetDBLite::monetdblite(), "/data/monetdb")
+# tbl_all_actions <- tbl(monetdb_con, "all_actions")
+
+# rendering
+m_get_visits <- memoise(get_visits, cache = fc)
+m_render <- memoise(rmarkdown::render, cache = fc)
+
+# lauching APIs - asynchronously!
+library(plumber)
+r <- plumber::plumb(system.file("API/APIs.R", package = "detectR"))
+zzz %<-% {r$run(port = 6666)}
