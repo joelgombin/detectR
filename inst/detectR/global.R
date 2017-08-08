@@ -18,6 +18,7 @@ publications <- m_solr_facet(q = "*:*", facet.pivot = c("platform", "site_url", 
 #   mutate(url = paste0("http://", url))
 
 anomalies <- read_csv("/data/main_anomalies.csv")
+scheme(anomalies$url) <- "http"
 
 load_urls <- function() {
   urls <- anomalies %>%
