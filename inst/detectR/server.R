@@ -14,7 +14,9 @@ shinyServer(function(input, output, session) {
   output$urls <- DT::renderDataTable({
     if (is_null(input$publications)) {
       anomaly_detection$url_prediction_anomalies %>% 
-        right_join(urls, by = c("url" = "id")) %>% 
+        right_join(urls %>% 
+                     filter(platform %in% c("Hypothèses", "Revues.org", "OpenEdition Books")[c(input$hypotheses, input$revues, input$books)]), 
+                   by = c("url" = "id")) %>% 
         left_join(publications, by = c("site_url", "platform")) %>% 
         select(platform, site_titre, naked_titre, url, fit_sigma_ratio) %>% 
         arrange(desc(fit_sigma_ratio)) %>% 
