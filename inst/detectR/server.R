@@ -11,11 +11,12 @@ shinyServer(function(input, output, session) {
                            selected = input$publications)
   })
 
-  output$urls <- DT::renderDataTable({
+  output$episode <- DT::renderDataTable({
     if (is_null(input$publications)) {
-      anomaly_detection$url_prediction_anomalies %>% 
+      anomalies %>% 
+        select(-platform) %>% 
         right_join(urls %>% 
-                     filter(platform %in% c("Hypothèses", "Revues.org", "OpenEdition Books")[c(input$hypotheses, input$revues, input$books)]), 
+                     filter(platform %in% c("Hypotheses.org", "Revues.org", "OpenEdition Books", "Calenda")[c(input$hypotheses, input$revues, input$books, input$calenda)]), 
                    by = c("url" = "id")) %>% 
         left_join(publications, by = c("site_url", "platform")) %>% 
         select(platform, site_titre, naked_titre, url, fit_sigma_ratio) %>% 
@@ -23,7 +24,8 @@ shinyServer(function(input, output, session) {
         mutate(fit_sigma_ratio = round(fit_sigma_ratio)) %>% 
         rename(Plateforme = platform, Publication = site_titre, Document = naked_titre, URL = url, intensité = fit_sigma_ratio)
     } else {
-      anomaly_detection$url_prediction_anomalies %>% 
+      anomalies %>% 
+        select(-platform) %>% 
         right_join(
           urls %>% 
             filter(site_url %in% input$publications),
@@ -39,4 +41,8 @@ shinyServer(function(input, output, session) {
   server = TRUE,
   selection = "single")
 
+  observe({
+    shinyjs::toggleState("go", !is.null(input$episode_rows_selected) && input$episode_rows_selecteds != "")
+  })
+  
 })

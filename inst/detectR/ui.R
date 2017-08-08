@@ -2,6 +2,8 @@
 
 shinyUI(
   fluidPage(
+    useShinyjs(),  # Include shinyjs
+    
 #            theme = "bootstrap.min.css",
     titlePanel("Bienvenue dans le détecteur de lecteurs inattendus !"),
     sidebarLayout(
@@ -16,6 +18,9 @@ shinyUI(
                     value = TRUE),
         switchInput("books",
                     "OpenEdition Books",
+                    value = TRUE),
+        switchInput("calenda",
+                    "Calenda",
                     value = TRUE),
         tags$h3("Publications :"),
         br(),
@@ -42,7 +47,8 @@ shinyUI(
            ),
       mainPanel(
         tags$h2("Choisissez l'épisode de lecteurs inattendus que vous voulez explorer"),
-        DT::dataTableOutput('urls')
+        DT::dataTableOutput('episode'),
+        actionButton("go", label = "Explorez !")
       )
     )
   )
