@@ -7,19 +7,21 @@ params:
   periode_start: !r as.Date("2017-01-01")
   periode_end: !r Sys.Date()
   url: http://chrhc.revues.org/1907
-  platform: 3
-  
+
   
   
 ---
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
-library(tidyverse)
+library(highcharter)
+library(memoise)
+library(detectR)
+library(dplyr)
 ```
 
-```{r global}
-source("./fonctions.R")
+```{r memoise}
+m_get_visits <- memoise(get_visits, cache = fc)
 ```
 
 
@@ -27,7 +29,24 @@ source("./fonctions.R")
 
 ```{r}
 
-getPageUrl(params$url, idSite = params$platform, period = "day", date = paste0(params$periode_start, ",", params$periode_end))
+df_visites <- m_get_visits(params$url, 
+           from = params$periode_start,
+           to = params$periode_end,
+           backend = tbl_all_actions)
+df_visites <- xts::xts(df_visites$n, order.by = df_visites$date)
+
+df_anomalies <- anomalies %>% 
+  filter(url %in% params$url) %>% 
+  mutate(title = "!", text = "Épisode de lecteurs inattendus")
+# df_anomalies <- xts::xts(df_anomalies$real_visitors, order.by = df_anomalies$date)
+
+
+
+
+highchart(type = "stock") %>%
+  hc_add_series(df_visites, id = "visites") %>%
+  hc_add_series(df_anomalies, hcaes(x = date), type = "flags", onSeries = "visites")
+
 
 ```
 
