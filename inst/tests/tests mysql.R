@@ -1,16 +1,30 @@
-library(RMySQL)
+#library(RMySQL)
+library(RMariaDB)
 library(dbplyr)
+library(pool)
 library(MonetDBLite)
 library(lubridate)
 library(tidyverse)
 
 
-conn <- DBI::dbConnect(MySQL(),
-                       host = "127.0.0.1",
-                       user = "rstudio",
-                       pass = "mae5ooCh",
-                       dbname = "piwik",
-                       port = 3307)
+# conn <- DBI::dbConnect(MySQL(),
+#                        host = "127.0.0.1",
+#                        user = "rstudio",
+#                        pass = "mae5ooCh",
+#                        dbname = "piwik",
+#                        port = 3307)
+# conn <- DBI::dbConnect(MariaDB(),
+#                        host = "127.0.0.1",
+#                        user = "rstudio",
+#                        pass = "mae5ooCh",
+#                        dbname = "piwik",
+#                        port = 3307)
+conn <- dbPool(MariaDB(),
+               host = "127.0.0.1",
+               user = "rstudio",
+               pass = "mae5ooCh",
+               dbname = "piwik",
+               port = 3307)
 DBI::dbListTables(conn)
 
 monetdb_con <- DBI::dbConnect(monetdblite(), "~/data/monetdb")
@@ -97,9 +111,9 @@ urls <- tbl_all_actions %>%
   mutate(parameter = NA) %>% 
   mutate(fragment = NA) %>% 
   mutate(port = NA) %>% 
-  mutate(domain = re_substitutes(domain, re_domaines)) %>%
+  mutate(domain = re_substitutes(domain, re_domaines, "\\1")) %>%
   url_compose() %>% 
-  stringr::str_replace_all(value, " ", "") %>% 
+  stringr::str_replace_all(" ", "") %>% 
   as_tibble
   
 tbl_all_actions$url <- urls$value

@@ -8,7 +8,7 @@
 #' @export
 #' @importFrom magrittr %>%
 read_aggregated_piwick_file <- function(aggregated_piwick_file) {
-  urls <- read_csv(aggregated_piwick_file)
+  urls <- readr::read_csv(aggregated_piwick_file)
 
   not_url = c("Autres", "http://www.revues.org/")
 
@@ -56,9 +56,9 @@ complete_time <- function(aggregated_frequent) {
 get_aggregated_piwick <- function(aggregated_piwick_file, absolute_days=10, relative_days=0.9) {
 
   #We open the cleaned file containing all the logs
-  aggregated_piwick <- readr::read_csv2(aggregated_piwick_file) %>%
+  aggregated_piwick <- readr::read_csv(aggregated_piwick_file) %>%
     dplyr::rename(nb_visits = log_count) %>%
-    dplyr::select(-X1)
+    dplyr::select(-`X1`)
 
   #We get the max date recorded in the full dataset (for every urls).
   max_absolute_date <- lubridate::ymd(max(aggregated_piwick$date))

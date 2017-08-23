@@ -4,12 +4,12 @@ Version: 0.0.0.9000
 Authors@R: c(person("Pierre-Carl", "Langlais", email = "pierrecarl.langlais@gmail.com", role = c("aut", "cre")),
              person("Joël", "Gombin", email = "joel.gombin@gmail.com", role = "aut"),
              person("OpenEdition", role = "cph"))
-Description: Ce package fournit des fonctions pour détecter, dans un corpus de statistiques de de fréquentation de documents, des pics inattendus de visites. 
+Description: This package provides functions to detect unexpected peaks of visits in a corpus of logs. // Ce package fournit des fonctions pour détecter, dans un corpus de statistiques de fréquentation de documents, des pics inattendus de visites. 
 Depends: R (>= 3.3.0)
 Imports: stats,
     tibble,
     readr,
-    dplyr,
+    dplyr (>= 0.7.0),
     tidyr,
     purrr,
     lubridate,
@@ -18,10 +18,13 @@ Imports: stats,
     httr,
     rms, 
     broom, 
-    Hmisc
+    Hmisc,
+    DBI,
+    pool
 Suggests: flexdashboard,
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

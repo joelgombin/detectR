@@ -27,7 +27,7 @@ First we clean up the piwick logs. Two variables allow to filter the dataset mor
 - The relative number of recording days viz. the first time the url appears in the logs (which may reflect its publication date)
 
 ```{r}
-logs_board <- get_aggregated_piwick("../../../../atelier-data/complete_log_clean.csv", absolute_days=20, relative_days=0.9)
+logs_board <- get_aggregated_piwick(system.file("extdata/complete_log_clean.csv", package = "detectR"), absolute_days=20, relative_days=0.9)
 ```
 
 Then we get the main variable of time variability, which includes seasonal (weekly) variation, general trend on revues.org.
