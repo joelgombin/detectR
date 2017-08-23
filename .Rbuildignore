@@ -3,3 +3,5 @@
 ^test_robest\.R$
 ^\.test robest\.R$
 ^inst/graphiques/.*$
+config.yml
+detectR_cache
