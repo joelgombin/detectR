@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^test_robest\.R$
 ^\.test robest\.R$
+^inst/graphiques/.*$
