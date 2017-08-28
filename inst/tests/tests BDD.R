@@ -53,3 +53,10 @@ get_tbl_visit_actions(conn1, 53351474)
 
 extract_and_load(conn1, conn2, from = 34127327)
 # \o/ works!
+
+
+test_visites <- get_visits(all_actions, from = lubridate::ymd("2017-01-01"), to = lubridate::ymd("2017-08-22"))
+# \o/ works!
+
+copy_to(conn2, test_visites, name = "visites_agregees", temporary = FALSE)
+
