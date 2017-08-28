@@ -95,10 +95,15 @@ get_tbl_visit_actions <- function(conn, from) {
 get_tbl_all_actions <- function(tbl_visites, tbl_actions, tbl_visites_actions) {
   # a regex for cleaning domain names
   # re_domaines <- rex(start,
+  #                    group(
+  #                      maybe(zero_or_more(number),
+  #                            "-")
+  #                    ),
   #                    capture(
   #                      group(zero_or_more(alnum),
   #                            group(maybe(dot),
-  #                                  "revues.org")) %or% 
+  #                                  "revues.org")
+  #                      ) %or% 
   #                        group("books.openedition.org") %or%
   #                        group("calenda.org") %or%
   #                        group(
@@ -108,7 +113,7 @@ get_tbl_all_actions <- function(tbl_visites, tbl_actions, tbl_visites_actions) {
   #                    ),
   #                    anything,
   #                    end)
-  re_domaines <- "^((?:(?:(?:(?:(?:[[:alnum:]])*(?:(?:\\.)?revues\\.org))|(?:books\\.openedition\\.org))|(?:calenda\\.org))|(?:(?:(?:[[:alnum:]])*(?:\\.)?)hypotheses\\.org))).*$"
+  re_domaines <- "^(?:(?:(?:[[:digit:]])*-)?)((?:(?:(?:(?:(?:[[:alnum:]])*(?:(?:\\.)?revues\\.org))|(?:books\\.openedition\\.org))|(?:calenda\\.org))|(?:(?:(?:[[:alnum:]])*(?:\\.)?)hypotheses\\.org))).*$"
   
   # let's join all tables
   tbl_all_actions <- tbl_visites %>% 
@@ -134,7 +139,7 @@ get_tbl_all_actions <- function(tbl_visites, tbl_actions, tbl_visites_actions) {
     dplyr::mutate(fragment = NA) %>% 
     dplyr::mutate(port = NA) %>% 
     dplyr::mutate(domain = sub(re_domaines, "\\1", domain))
-  
+
   tbl_all_actions$url <- urls %>%
     urltools::url_compose() %>% 
     stringr::str_replace_all(" ", "") %>% 

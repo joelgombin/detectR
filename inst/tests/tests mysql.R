@@ -86,16 +86,21 @@ library(rex)
 rex_mode()
 
 re_domaines <- rex(start,
+                   group(
+                     maybe(zero_or_more(number),
+                           "-")
+                     ),
                  capture(
                    group(zero_or_more(alnum),
-                   group(maybe(dot),
-                  "revues.org")) %or% 
+                     group(maybe(dot),
+                      "revues.org")
+                   ) %or% 
                    group("books.openedition.org") %or%
                    group("calenda.org") %or%
                    group(
                      group(zero_or_more(alnum),
                          maybe(dot)),
-                 "hypotheses.org")
+                     "hypotheses.org")
                  ),
                  anything,
                  end)
