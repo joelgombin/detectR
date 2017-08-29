@@ -187,5 +187,5 @@ extract_and_load <- function(conn1, conn2, from, progress = TRUE) {
   DBI::dbWriteTable(conn2, "all_actions", tbl_all_actions, append = TRUE)
   setTxtProgressBar(pb, 1)
   close(pb)
-  return(dplyr::tbl(conn2, "all_actions"))
+  return(dplyr::tbl(conn2, "all_actions") %>% arrange(desc(idvisit)))
 }
