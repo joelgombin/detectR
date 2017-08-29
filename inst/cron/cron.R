@@ -1,7 +1,11 @@
-library(pool)
-library(MonetDBLite)
-library(dplyr)
-library(detectR)
+# for debugging
+
+message(Sys.time(), "\n")
+
+suppressPackageStartupMessages(library(pool))
+suppressPackageStartupMessages(library(MonetDBLite))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(detectR))
 
 mysql <- config::get("mysql", file = "~/detectR/inst/cron/config.yml")
 monetdb <- config::get("monetdb", file = "~/detectR/inst/cron/config.yml")
@@ -23,4 +27,8 @@ from <- all_actions %>%
   collect(n = 1) %>% 
   pull(idvisit) + 1
 
-extract_and_load(conn1, conn2, from = from)
+extract_and_load(conn1, conn2, from = from, progress = FALSE)
+
+poolClose(conn1)
+poolClose(conn2)
+message(Sys.time())
