@@ -4,7 +4,13 @@
 \alias{get_visits}
 \title{Get number of visits for a given URL}
 \usage{
-get_visits(visited_url, from, to, backend)
+get_visits(backend, visited_urls = NULL, from = Sys.Date(),
+  to = Sys.Date())
+}
+\arguments{
+\item{backend}{table (usually a SQL table) friom which the data is agregated}
+
+\item{visited_urls}{a vector of urls}
 }
 \description{
 Get number of visits for a given URL
