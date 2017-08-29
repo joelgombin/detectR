@@ -27,7 +27,7 @@ conn <- dbPool(MariaDB(),
                port = 3307)
 DBI::dbListTables(conn)
 
-monetdb_con <- DBI::dbConnect(monetdblite(), "~/data/monetdb")
+monetdb_con <- dbPool(monetdblite(), embedded = "~/data/monetdb")
 
 
 log_visit <- tbl(conn, "log_visit")
@@ -108,7 +108,7 @@ re_domaines <- rex(start,
 
 
 library(urltools)
-`mydomain<-` <- Vectorize(`domain<-`)  
+# `mydomain<-` <- Vectorize(`domain<-`)  
 urls <- tbl_all_actions %>% 
   pull(name) %>% 
   url_parse %>% 
@@ -116,12 +116,17 @@ urls <- tbl_all_actions %>%
   mutate(parameter = NA) %>% 
   mutate(fragment = NA) %>% 
   mutate(port = NA) %>% 
-  mutate(domain = re_substitutes(domain, re_domaines, "\\1")) %>%
-  url_compose() %>% 
-  stringr::str_replace_all(" ", "") %>% 
-  as_tibble
+  mutate(domain = re_substitutes(domain, re_domaines, "\\1"))
+
+tbl_all_actions$domain <- urls$domain
+
+# tbl_all_actions$url <- urls %>% 
+#   url_compose() %>% 
+#   stringr::str_replace_all(" ", "")
+
+
   
-tbl_all_actions$url <- urls$value
+# tbl_all_actions$url <- urls$value
 
 tbl_all_actions <- tbl_all_actions %>%
   mutate(date = floor_date(ymd_hms(visit_last_action_time), "day"))
