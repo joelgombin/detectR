@@ -35,7 +35,6 @@ read_aggregated_piwick_file <- function(aggregated_piwick_file) {
 
 #' A function to retrieve all the "missing" dates and sets the number of visits to 0.
 #' @export
-#' @importFrom magrittr %>%
 complete_time <- function(aggregated_frequent) {
   time_sequence <- seq(aggregated_frequent$date[which.min(aggregated_frequent$date)], aggregated_frequent$date[which.max(aggregated_frequent$date)], by="day") #First we get the complete sequence of "hours" during the period (by selection the min and max time recorded in timestamp)
   aggregated_frequent <- aggregated_frequent %>%
