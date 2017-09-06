@@ -151,3 +151,19 @@ test <- dbGetQuery(monetdb_con, request)
 toutes_visites <- get_visits(monetdb_con, from = lubridate::ymd("2017-01-01"), to = lubridate::ymd("2017-08-04"))
 
 dbWriteTable(monetdb_con, toutes_visites, "visites_par_jour", overwrite = TRUE)
+
+# tests préparation données pour modélisation
+
+toutes_visites <- tbl(monetdb_con, "visites_par_jour") %>% 
+  collect()
+
+assez_visites <- toutes_visites  %>% 
+  group_by(url) %>% 
+  filter(n() > 10)
+
+assez_visites_expanded <- assez_visites %>% 
+  complete(date, url, fill = list(n = 0))
+
+aggregated_visites <- get_aggregated_visites(assez_visites)
+
+visites_ts <- get_calendar_time_series(aggregated_visites)

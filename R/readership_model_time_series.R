@@ -21,7 +21,7 @@ get_calendar_time_series <- function(logs_board){
   all_mean <- mean(all_per_day$mean_days)
   time_decomposition <- stats::decompose(stats::ts(all_per_day$mean_days, freq=7))
   fit_trend <- get_trend_model(time_decomposition, all_per_day)
-  predict_trend <- broom::predict(fit_trend, all_per_day)
+  predict_trend <- stats::predict(fit_trend, all_per_day)
   predict_trend <- 1+(1-predict_trend/all_mean)
   all_per_day$trend <- predict_trend
   wday_values <- get_wday_values(time_decomposition, all_per_day, all_mean)
