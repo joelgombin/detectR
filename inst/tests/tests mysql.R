@@ -4,6 +4,7 @@ library(dbplyr)
 library(pool)
 library(MonetDBLite)
 library(lubridate)
+library(detectR)
 library(tidyverse)
 
 
@@ -27,7 +28,7 @@ conn <- dbPool(MariaDB(),
                port = 3307)
 DBI::dbListTables(conn)
 
-monetdb_con <- dbPool(monetdblite(), embedded = "~/data/monetdb")
+monetdb_con <- dbPool(monetdblite(), embedded = "~/data/monetdb_test/")
 
 
 log_visit <- tbl(conn, "log_visit")
@@ -132,3 +133,21 @@ tbl_all_actions <- tbl_all_actions %>%
   mutate(date = floor_date(ymd_hms(visit_last_action_time), "day"))
 
 DBI::dbWriteTable(monetdb_con, "all_actions", tbl_all_actions, overwrite = TRUE)
+
+# test agrégation
+
+unique_valid_urls <- tbl_all_actions %>% 
+  distinct(url) %>% 
+  pull(url) %>% 
+  validate_url()
+
+toutes_visites <- get_visits(tbl_all_actions, unique_valid_urls, from = lubridate::ymd("2017-01-01"))
+
+request <- paste0('SELECT idvisit, url, date FROM all_actions WHERE url IN (\'', paste0(unique_valid_urls[1:10], collapse = "\', \'"), '\') AND "date" >= \'', ymd("2017-01-01"), '\' AND "date" <= \'', Sys.Date(), '\'')
+
+test <- dbGetQuery(monetdb_con, request)
+
+
+toutes_visites <- get_visits(monetdb_con, from = lubridate::ymd("2017-01-01"), to = lubridate::ymd("2017-08-04"))
+
+dbWriteTable(monetdb_con, toutes_visites, "visites_par_jour", overwrite = TRUE)
