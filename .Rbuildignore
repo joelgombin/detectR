@@ -5,3 +5,4 @@
 ^inst/graphiques/.*$
 config.yml
 detectR_cache
+cron.log
