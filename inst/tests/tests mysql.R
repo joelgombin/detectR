@@ -167,3 +167,7 @@ assez_visites_expanded <- assez_visites %>%
 aggregated_visites <- get_aggregated_visites(assez_visites)
 
 visites_ts <- get_calendar_time_series(aggregated_visites)
+
+aggregated_visites$aggregated_frequent <- correct_time_series(aggregated_visites$aggregated_frequent, visites_ts)
+
+anomaly_detection <- detection_anomalies_rcs(aggregated_visites$aggregated_frequent)
