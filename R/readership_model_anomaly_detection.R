@@ -11,7 +11,7 @@ get_rcs_group <- function(diff_days, log_value_estimated, knots){
 #' @export
 get_rcs_anomalies <- function(fit, log_value_estimated, diff_days, knots) {
   appd <- tibble::tibble(diff_days, log_value_estimated)
-  knot_defined <- rms::rcspline.eval(appd$diff_days, nk=knots)
+  knot_defined <- Hmisc::rcspline.eval(appd$diff_days, nk=knots)
   fit_sigma_ratio <- broom::augment(fit)$.sigma
   sigma_mean <- mean(fit_sigma_ratio)
   fit_sigma_ratio <- (abs(sigma_mean-fit_sigma_ratio)/sigma_mean)*100
