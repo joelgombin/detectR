@@ -3,7 +3,7 @@
 get_rcs_group <- function(diff_days, log_value_estimated, knots){
   appd = tibble::tibble(diff_days, log_value_estimated)
   fit <- lm(log_value_estimated ~ rms::rcs(diff_days, knots), data=appd)
-  prediction <- broom::predict(fit, newdata = appd)
+  prediction <- stats::predict(fit, newdata = appd)
   return(fit)
 }
 
@@ -15,7 +15,7 @@ get_rcs_anomalies <- function(fit, log_value_estimated, diff_days, knots) {
   fit_sigma_ratio <- broom::augment(fit)$.sigma
   sigma_mean <- mean(fit_sigma_ratio)
   fit_sigma_ratio <- (abs(sigma_mean-fit_sigma_ratio)/sigma_mean)*100
-  fit_confidence <- tibble::tibble(appd, broom::predict(fit, interval="prediction"), fit_sigma_ratio)
+  fit_confidence <- tibble::tibble(appd, stats::predict(fit, interval="prediction"), fit_sigma_ratio)
   return(fit_confidence)
 }
 
