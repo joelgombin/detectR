@@ -4,14 +4,19 @@
 \alias{get_visits}
 \title{Get number of visits for a given URL}
 \usage{
-get_visits(backend, visited_urls = NULL, from = Sys.Date(),
-  to = Sys.Date())
+get_visits(conn, table = "all_actions", visited_urls = NULL,
+  from = Sys.Date(), to = Sys.Date())
 }
 \arguments{
-\item{backend}{table (usually a SQL table) friom which the data is agregated}
+\item{conn}{a connection to the database from which the data is retrieved}
+
+\item{table}{the table name from which the data is agregated}
 
 \item{visited_urls}{a vector of urls}
 }
 \description{
 Get number of visits for a given URL
+}
+\details{
+This function only retains one hit per visit (in the meaning of piwik). Only non-zero values are kept; in order to show zero values, please use \code{tidyr::fill}.
 }
