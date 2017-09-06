@@ -7,6 +7,8 @@
 get_tbl_actions(conn, from)
 }
 \arguments{
+\item{conn}{a connection to the database from which the data is retrieved}
+
 \item{from}{the action ID to start from}
 }
 \description{

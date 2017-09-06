@@ -6,6 +6,9 @@
 \usage{
 get_tbl_visit_actions(conn, from)
 }
+\arguments{
+\item{conn}{a connection to the database from which the data is retrieved}
+}
 \description{
 get the table linking visits and actions
 }
