@@ -29,6 +29,14 @@ from <- all_actions %>%
 
 extract_and_load(conn1, conn2, from = from, progress = FALSE)
 
+from <- tbl(conn2, "visites_par_jour") %>% 
+  summarise(from = max(date)) %>% 
+  pull(from)
+
+toutes_visites <- get_visits(conn2, from = from + lubridate::ddays(1), to = lubridate::ymd(Sys.Date()) - lubridate::ddays(1))
+
+dbWriteTable(conn2, "visites_par_jour", toutes_visites, append = TRUE)
+
 poolClose(conn1)
 poolClose(conn2)
-message(Sys.time())
+message(Sys.time(), "\n")
