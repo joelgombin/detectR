@@ -170,4 +170,6 @@ visites_ts <- get_calendar_time_series(aggregated_visites)
 
 aggregated_visites$aggregated_frequent <- correct_time_series(aggregated_visites$aggregated_frequent, visites_ts)
 
-anomaly_detection <- detection_anomalies_rcs(aggregated_visites$aggregated_frequent)
+anomaly_detection <- detection_anomalies_rcs(aggregated_visites$aggregated_frequent) # compter une quizaine de minutes d'exécution. Va aller croissant à mesure que le volume de données va augmenter, mais probablement moins que liénairement (car probablement plus impacté par nombre d'urls que nb de jours pour chaque url)
+
+copy_to(monetdb_con, anomaly_detection$url_prediction_anomalies, name = "url_prediction_anomalies", overwrite = TRUE, temporary = FALSE)
