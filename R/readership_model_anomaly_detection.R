@@ -15,7 +15,7 @@ get_rcs_anomalies <- function(fit, log_value_estimated, diff_days, knots) {
   fit_sigma_ratio <- broom::augment(fit)$.sigma
   sigma_mean <- mean(fit_sigma_ratio)
   fit_sigma_ratio <- (abs(sigma_mean-fit_sigma_ratio)/sigma_mean)*100
-  fit_confidence <- tibble::tibble(appd, stats::predict(fit, interval="prediction"), fit_sigma_ratio)
+  fit_confidence <- dplyr::bind_cols(appd, tibble::as_tibble(stats::predict(fit, interval="prediction")), tibble::as_tibble(fit_sigma_ratio))
   return(fit_confidence)
 }
 
@@ -23,7 +23,7 @@ get_rcs_anomalies <- function(fit, log_value_estimated, diff_days, knots) {
 #' @param details While you can use a different number of knots, 3 is generally a good fit.
 #' @importFrom magrittr %>%
 #' @export
-detection_anomalies_rcs <- function(sample_complete, knots=3){
+detection_anomalies_rcs <- function(sample_complete, knots=3) {
 
   message("calculating the rcs models")
 
@@ -31,7 +31,7 @@ detection_anomalies_rcs <- function(sample_complete, knots=3){
     dplyr::mutate(log_value_estimated = nb_visits_ts)
 
   url_prediction_models <- sample_complete %>%
-    dplyr::group_by(url) %>%
+    dplyr::group_by(url) %>% 
     dplyr::do(model_rcs = get_rcs_group(.$diff_days, .$log_value_estimated, knots), log_value_estimated = .$log_value_estimated, diff_days = .$diff_days, date = .$date)
 
   model_register <- url_prediction_models %>% 
@@ -44,10 +44,20 @@ detection_anomalies_rcs <- function(sample_complete, knots=3){
     dplyr::do(url = .$url, date = .$date, model_rcs = .$model_rcs, predictions = get_rcs_anomalies(.$model_rcs, .$log_value_estimated, .$diff_days, 3), log_value_estimated = .$log_value_estimated, diff_days = .$diff_days) %>%
     tidyr::unnest(url) %>%
     tidyr::unnest(predictions) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>% 
+    dplyr::left_join(
+      sample_complete %>% distinct(url, min_date),
+      by = "url"
+    ) %>% 
+    dplyr::mutate(date = min_date + lubridate::days(diff_days))
 
   url_prediction_anomalies <- url_prediction %>%
-    dplyr::filter(log_value_estimated>upr)
+    dplyr::filter(log_value_estimated>upr) %>% 
+    dplyr::left_join(
+      sample_complete %>% distinct(url, min_date),
+      by = "url"
+    ) %>% 
+    dplyr::mutate(date = min_date + lubridate::days(diff_days))
 
   url_prediction_count <- url_prediction_anomalies %>%
     dplyr::group_by(url) %>%
