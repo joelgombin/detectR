@@ -165,27 +165,27 @@ get_tbl_all_actions <- function(tbl_visites, tbl_actions, tbl_visites_actions) {
 #' @import utils
 #' 
 extract_and_load <- function(conn1, conn2, from, progress = TRUE) {
-  pb <- txtProgressBar(style = 3)
+  if (progress) pb <- txtProgressBar(style = 3)
   
   tbl_visits <- get_tbl_visits(conn1, from = from)
-  setTxtProgressBar(pb, 0.1)
+  if (progress) setTxtProgressBar(pb, 0.1)
   DBI::dbWriteTable(conn2, "visites", tbl_visits, append = TRUE)
-  setTxtProgressBar(pb, 0.2)
+  if (progress) setTxtProgressBar(pb, 0.2)
   
   tbl_actions <- get_tbl_actions(conn1, from = 0) # we need all actions, since they're not chronological
-  setTxtProgressBar(pb, 0.3)
+  if (progress) setTxtProgressBar(pb, 0.3)
   DBI::dbWriteTable(conn2, "actions", tbl_actions, overwrite = TRUE)
-  setTxtProgressBar(pb, 0.4)
+  if (progress) setTxtProgressBar(pb, 0.4)
   
   tbl_visit_actions <- get_tbl_visit_actions(conn1, from = from)
-  setTxtProgressBar(pb, 0.5)
+  if (progress) setTxtProgressBar(pb, 0.5)
   DBI::dbWriteTable(conn2, "visites_actions", tbl_visit_actions, append = TRUE)
-  setTxtProgressBar(pb, 0.6)
+  if (progress) setTxtProgressBar(pb, 0.6)
   
   tbl_all_actions <- get_tbl_all_actions(tbl_visits, tbl_actions, tbl_visit_actions)
-  setTxtProgressBar(pb, 0.8)
+  if (progress) setTxtProgressBar(pb, 0.8)
   DBI::dbWriteTable(conn2, "all_actions", tbl_all_actions, append = TRUE)
-  setTxtProgressBar(pb, 1)
-  close(pb)
+  if (progress) setTxtProgressBar(pb, 1)
+  if (progress) close(pb)
   return(dplyr::tbl(conn2, "all_actions") %>% arrange(desc(idvisit)))
 }
