@@ -40,6 +40,11 @@ dbWriteTable(conn2, "visites_par_jour", toutes_visites, append = TRUE)
 
 # run the model to extract outliers
 
+toutes_visites <- tbl(monetdb_con, "visites_par_jour") %>% 
+  collect %>% 
+  group_by(url) %>% 
+  filter(n() > 10)
+
 assez_visites <- toutes_visites  %>% 
   group_by(url) %>% 
   filter(n() > 10)
