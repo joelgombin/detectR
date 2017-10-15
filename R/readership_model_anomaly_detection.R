@@ -55,7 +55,7 @@ detection_anomalies_rcs <- function(sample_complete, knots=3) {
     dplyr::filter(log_value_estimated>upr) %>% 
     dplyr::left_join(
       sample_complete %>% distinct(url, min_date),
-      by = "url"
+      by = c("url", "min_date")
     ) %>% 
     dplyr::mutate(date = min_date + lubridate::days(diff_days))
 
