@@ -4,7 +4,7 @@
 #' @param conn a connection to the database from which the data is retrieved
 #' @param table the table name from which the data is agregated 
 #' @param visited_urls a vector of urls 
-#' @details This function only retains one hit per visit (in the meaning of piwik). Only non-zero values are kept; in order to show zero values, please use `tidyr::fill`.
+#' @details This function only retains one hit per visit (in the meaning of piwik). Only non-zero values are kept; in order to show zero values, please use `tidyr::complete`.
 get_visits <- function(conn, table = "all_actions", visited_urls = NULL, from = Sys.Date(), to = Sys.Date()) {
   
   if (is.null(visited_urls)) {

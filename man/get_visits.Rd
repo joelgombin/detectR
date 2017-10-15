@@ -18,5 +18,5 @@ get_visits(conn, table = "all_actions", visited_urls = NULL,
 Get number of visits for a given URL
 }
 \details{
-This function only retains one hit per visit (in the meaning of piwik). Only non-zero values are kept; in order to show zero values, please use \code{tidyr::fill}.
+This function only retains one hit per visit (in the meaning of piwik). Only non-zero values are kept; in order to show zero values, please use \code{tidyr::complete}.
 }
