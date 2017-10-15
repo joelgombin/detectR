@@ -1,7 +1,4 @@
 
-week_day_list = c("1" = "Dimanche", "2" = "Lundi", "3" = "Mardi", "4" = "Mercredi", "5" = "Jeudi", "6" = "Vendredi", "7" = "Samedi")
-
-
 #' A general function to get all the relevant element to decompose a calendar time serie (based on the absolute date of publication)
 
 #' The main outputs are stored into a "time_serie_board" object. It includes:
@@ -55,10 +52,11 @@ get_trend_model <- function(time_decomposition, all_per_day){
 #' @export
 #' @importFrom magrittr %>%
 get_wday_values <- function(time_decomposition, all_per_day, all_mean){
-  wday_values <- tibble::tibble(time_decomposition$seasonal[1:7], wday(all_per_day$date)[1:7])
+  wday_values <- tibble::tibble(time_decomposition$seasonal[1:7], lubridate::wday(all_per_day$date)[1:7])
   colnames(wday_values) <- c("seasonal_value", "week_day_number")
   wday_values <-  wday_values %>%
-    dplyr::mutate(week_day_name = factor(week_day_number, labels = week_day_list)) %>%
+    dplyr::mutate(week_day_name = factor(week_day_number, labels = c("1" = "Dimanche", "2" = "Lundi", "3" = "Mardi", "4" = "Mercredi", "5" = "Jeudi", "6" = "Vendredi", "7" = "Samedi")
+)) %>%
     dplyr::mutate(prop_seasonal_value = ((all_mean + seasonal_value)/all_mean)) %>%
     dplyr::mutate(i_prop_seasonal_value = 1+(1-prop_seasonal_value))
   return(wday_values)
@@ -69,17 +67,21 @@ get_wday_values <- function(time_decomposition, all_per_day, all_mean){
 get_outliers <- function(all_per_day) {
   lm_cleaned_time <- lm(fully_corrected_mean_days ~ day_publication, data=all_per_day)
   cooksd <- cooks.distance(lm_cleaned_time)
-  cooksd <- t(t(cooksd[cooksd>0.1]))
-  cooksd <- tibble::tibble(row.names(cooksd), cooksd[,1])
-  colnames(cooksd) <- c("day_publication", "outlier_value")
-  cooksd <- cooksd %>%
-    dplyr::mutate(day_publication = as.numeric(day_publication)) %>%
-    dplyr::mutate(replacement_day=ifelse(day_publication %in% nrow(cooksd), day_publication-1, day_publication+1))
-  cooksd$original_value <- all_per_day$fully_corrected_mean_days[cooksd$day_publication]
-  cooksd$replacement_value <- all_per_day$fully_corrected_mean_days[cooksd$replacement_day]
-  cooksd <- cooksd %>%
-    dplyr::mutate(corrective_value = 1 + (1 - original_value / replacement_value))
-  return(cooksd)
+  if (sum(cooksd>0.1)) {
+    cooksd <- t(t(cooksd[cooksd>0.1]))
+    cooksd <- tibble::tibble(row.names(cooksd), cooksd[,1])
+    colnames(cooksd) <- c("day_publication", "outlier_value")
+    cooksd <- cooksd %>%
+      dplyr::mutate(day_publication = as.numeric(day_publication)) %>%
+      dplyr::mutate(replacement_day=ifelse(day_publication %in% nrow(cooksd), day_publication-1, day_publication+1))
+    cooksd$original_value <- all_per_day$fully_corrected_mean_days[cooksd$day_publication]
+    cooksd$replacement_value <- all_per_day$fully_corrected_mean_days[cooksd$replacement_day]
+    cooksd <- cooksd %>%
+      dplyr::mutate(corrective_value = 1 + (1 - original_value / replacement_value))
+    return(cooksd)
+  } else {
+    return(NULL)
+  }
 }
 
 #' @export
