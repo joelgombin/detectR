@@ -44,22 +44,23 @@ assez_visites <- toutes_visites  %>%
   group_by(url) %>% 
   filter(n() > 10)
 
-assez_visites_expanded <- assez_visites %>% 
-  complete(date, url, fill = list(n = 0))
-
-aggregated_visites <- get_aggregated_visites(assez_visites)
-
-visites_ts <- get_calendar_time_series(aggregated_visites)
-
-aggregated_visites$aggregated_frequent <- correct_time_series(aggregated_visites$aggregated_frequent, visites_ts)
-
-anomaly_detection <- detection_anomalies_rcs(aggregated_visites$aggregated_frequent) # compter une quizaine de minutes d'exécution. Va aller croissant à mesure que le volume de données va augmenter, mais probablement moins que liénairement (car probablement plus impacté par nombre d'urls que nb de jours pour chaque url)
-
-# on stocke les données. En l'état des choses, on réévalue tout tous les jours, donc on écrase la table
-copy_to(conn2, anomaly_detection$url_prediction_anomalies, name = "url_prediction_anomalies", overwrite = TRUE, temporary = FALSE)
-copy_to(conn2, anomaly_detection$url_prediction, name = "url_prediction", overwrite = TRUE, temporary = FALSE)
-copy_to(conn2, anomaly_detection$url_prediction_count, name = "url_prediction_count", overwrite = TRUE, temporary = FALSE)
-
+if (nrow(assez_visites) > 0) {
+  assez_visites_expanded <- assez_visites %>% 
+    tidyr::complete(date, url, fill = list(n = 0))
+  
+  aggregated_visites <- get_aggregated_visites(assez_visites)
+  
+  visites_ts <- get_calendar_time_series(aggregated_visites)
+  
+  aggregated_visites$aggregated_frequent <- correct_time_series(aggregated_visites$aggregated_frequent, visites_ts)
+  
+  anomaly_detection <- detection_anomalies_rcs(aggregated_visites$aggregated_frequent) # compter une quizaine de minutes d'exécution. Va aller croissant à mesure que le volume de données va augmenter, mais probablement moins que liénairement (car probablement plus impacté par nombre d'urls que nb de jours pour chaque url)
+  
+  # on stocke les données. En l'état des choses, on réévalue tout tous les jours, donc on écrase la table
+  copy_to(conn2, anomaly_detection$url_prediction_anomalies, name = "url_prediction_anomalies", overwrite = TRUE, temporary = FALSE)
+  copy_to(conn2, anomaly_detection$url_prediction, name = "url_prediction", overwrite = TRUE, temporary = FALSE)
+  copy_to(conn2, anomaly_detection$url_prediction_count, name = "url_prediction_count", overwrite = TRUE, temporary = FALSE)
+}
 
 # faire une copie de sauvegarde de la bdd
 
