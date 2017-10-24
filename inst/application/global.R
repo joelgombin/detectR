@@ -20,12 +20,22 @@ m_get_metadata <- memoise(get_metadata, cache = fc)
 
 publications <- m_solr_facet(q = "*:*", facet.pivot = c("platform", "site_url", "site_titre"), facet.limit = -1)$facet_pivot$`platform,site_url,site_titre` %>% unnest()
 
+# lauching APIs - asynchronously!
+library(plumber)
+r <- plumber::plumb(system.file("API/APIs.R", package = "detectR"))
+zzz %<-% {r$run(port = 6666)}
+
+
 # load("./data/anomaly_detection.Rdata")
 # anomaly_detection$url_prediction_anomalies <- anomaly_detection$url_prediction_anomalies %>% 
 #   mutate(url = paste0("http://", url))
 
-anomalies <- read_csv("/data/main_anomalies.csv")
-scheme(anomalies$url) <- "http"
+# anomalies <- read_csv("/data/main_anomalies.csv")
+# scheme(anomalies$url) <- "http"
+
+anomalies <- httr::GET(paste0("http://localhost:6666/get_outliers?from=", "2017-01-01", "&to=", Sys.Date())) %>% content(as = "parsed")
+
+
 
 load_urls <- function() {
   urls <- anomalies %>%
@@ -77,7 +87,4 @@ names(publis$Books) <- publications %>%
 m_get_visits <- memoise(get_visits, cache = fc)
 m_render <- memoise(rmarkdown::render, cache = fc)
 
-# lauching APIs - asynchronously!
-library(plumber)
-r <- plumber::plumb(system.file("API/APIs.R", package = "detectR"))
-zzz %<-% {r$run(port = 6666)}
+
