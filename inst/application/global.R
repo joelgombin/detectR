@@ -23,7 +23,8 @@ publications <- m_solr_facet(q = "*:*", facet.pivot = c("platform", "site_url", 
 # lauching APIs - asynchronously!
 library(plumber)
 r <- plumber::plumb(system.file("API/APIs.R", package = "detectR"))
-zzz %<-% {r$run(port = 6666)}
+port <- sample(1000:9999, 1)
+zzz %<-% {r$run(port = port)}
 
 
 # load("./data/anomaly_detection.Rdata")
@@ -33,7 +34,7 @@ zzz %<-% {r$run(port = 6666)}
 # anomalies <- read_csv("/data/main_anomalies.csv")
 # scheme(anomalies$url) <- "http"
 
-anomalies <- httr::GET(paste0("http://localhost:6666/get_outliers?from=", "2017-01-01", "&to=", Sys.Date())) %>% content(as = "parsed")
+anomalies <- httr::GET(paste0("http://localhost:", port, "/get_outliers?from=", "2017-01-01", "&to=", Sys.Date())) %>% httr::content(as = "parsed")
 
 
 

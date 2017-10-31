@@ -83,7 +83,7 @@ shinyServer(function(input, output, session) {
     withProgress(message = "affichage du dashboard en cours...", value = 0.1, {
       tmp <- tempfile()
       setProgress(value = 0.2, message = paste0("écriture sur", tmp))
-      writeChar(httr::GET(paste0("http://localhost:6666/", sub("/data/", "", path()))) %>% content(as = "text"), con = tmp)
+      writeChar(httr::GET(paste0("http://localhost:", port, "/", sub("/data/", "", path()))) %>% content(as = "text"), con = tmp)
       includeHTML(tmp)
       setProgress(value = 1)
     })
