@@ -1,7 +1,7 @@
 library(tidyverse)
 
 #* @get /get_visits
-get_visits <- function(visited_urls, from = "2017-01-01", to = "2017-08-01") {
+get_visits <- function(visited_urls = NULL, from = "2017-01-01", to = "2017-08-01") {
   monetdb <- config::get("monetdb", file = "~/detectR/inst/cron/config.yml")
   on.exit({pool::poolClose(conn)})
   conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
