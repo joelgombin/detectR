@@ -40,14 +40,14 @@ dbWriteTable(conn2, "visites_par_jour", toutes_visites, append = TRUE)
 
 # run the model to extract outliers
 
-toutes_visites <- tbl(conn2, "visites_par_jour") %>% 
+assez_visites <- tbl(conn2, "visites_par_jour") %>% 
   collect %>% 
   group_by(url) %>% 
   filter(n() > 10)
 
-assez_visites <- toutes_visites  %>% 
-  group_by(url) %>% 
-  filter(n() > 10)
+# assez_visites <- toutes_visites  %>% 
+#   group_by(url) %>% 
+#   filter(n() > 10)
 
 if (nrow(assez_visites) > 0) {
   assez_visites_expanded <- assez_visites %>% 
@@ -62,9 +62,9 @@ if (nrow(assez_visites) > 0) {
   anomaly_detection <- detection_anomalies_rcs(aggregated_visites$aggregated_frequent) # compter une quizaine de minutes d'exécution. Va aller croissant à mesure que le volume de données va augmenter, mais probablement moins que liénairement (car probablement plus impacté par nombre d'urls que nb de jours pour chaque url)
   
   # on stocke les données. En l'état des choses, on réévalue tout tous les jours, donc on écrase la table
-  copy_to(conn2, anomaly_detection$url_prediction_anomalies, name = "url_prediction_anomalies", overwrite = TRUE, temporary = FALSE)
-  copy_to(conn2, anomaly_detection$url_prediction, name = "url_prediction", overwrite = TRUE, temporary = FALSE)
-  copy_to(conn2, anomaly_detection$url_prediction_count, name = "url_prediction_count", overwrite = TRUE, temporary = FALSE)
+  dbWriteTable(conn2, "url_prediction_anomalies", anomaly_detection$url_prediction_anomalies, overwrite = TRUE)
+  dbWriteTable(conn2, "url_prediction", anomaly_detection$url_prediction, overwrite = TRUE)
+  dbWriteTable(conn2, "url_prediction_count", anomaly_detection$url_prediction_count, overwrite = TRUE)
 }
 
 # faire une copie de sauvegarde de la bdd
