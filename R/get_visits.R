@@ -5,12 +5,17 @@
 #' @param table the table name from which the data is agregated 
 #' @param visited_urls a vector of urls 
 #' @details This function only retains one hit per visit (in the meaning of piwik). Only non-zero values are kept; in order to show zero values, please use `tidyr::complete`.
-get_visits <- function(conn, table = "all_actions", visited_urls = NULL, from = Sys.Date(), to = Sys.Date()) {
+get_visits <- function(conn, table = "all_actions", visited_urls = NULL, from = "2017-01-01", to = Sys.Date()) {
+  
+  date <- "date"
+  from <- as.character(from)
+  to <- as.character(to)
   
   if (is.null(visited_urls)) {
-    request <- paste0('SELECT idvisit, url, date FROM ', table,' WHERE "date" >= \'', lubridate::ymd("2017-01-01"), '\' AND "date" <= \'', Sys.Date(), '\'')
+    request <- glue::glue_sql("SELECT idvisit, url, date FROM {`table`} WHERE {`date`} >= {from} AND {`date`} <= {to}", .con = conn)
   } else {
-    request <- paste0('SELECT idvisit, url, date FROM ', table, ' WHERE url IN (\'', paste0(visited_urls, collapse = "\', \'"), '\') AND "date" >= \'', lubridate::ymd("2017-01-01"), '\' AND "date" <= \'', Sys.Date(), '\'')
+    request <- glue::glue_sql("SELECT idvisit, url, date FROM {`table`} WHERE url IN ({visited_urls*}) AND {`date`} >= {from} AND {`date`} <= {to}", .con = conn)
+      
   }
   
 #  cat(request) for debug
