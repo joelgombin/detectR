@@ -3,9 +3,9 @@
 function(request) {
   fluidPage(
     useShinyjs(),  # Include shinyjs
-    
-#            theme = "bootstrap.min.css",
-    titlePanel("Bienvenue dans le détecteur de lecteurs inattendus !"),
+    title = "Détecteur de lecteurs inattendus",
+    theme = "style.css",
+    titlePanel(title = div(img(src = "./img/openedition_72dpi.png", width = 200), br(),  "Bienvenue dans le détecteur de lecteurs inattendus !")),
     sidebarLayout(
       div(id = "panel", 
           sidebarPanel(
@@ -44,7 +44,14 @@ function(request) {
                            format = "dd/mm/yyyy",
                            weekstart = 1,
                            language = "fr",
-                           separator = "à")
+                           separator = "à"),
+            br(),
+            sliderInput("seuil", 
+                        label = "Intensité minimale", 
+                        min = 0, 
+                        max = 1, 
+                        value = 0.2, 
+                        step = 0.01)
             )
           ),
       mainPanel(

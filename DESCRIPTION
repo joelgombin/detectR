@@ -20,12 +20,13 @@ Imports: stats,
     broom, 
     Hmisc,
     DBI,
-    pool
+    pool,
 Suggests: flexdashboard,
     knitr,
     rmarkdown,
     testthat,
-    glue
+    glue,
+    DT (> 0.2)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

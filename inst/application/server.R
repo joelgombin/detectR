@@ -14,36 +14,41 @@ shinyServer(function(input, output, session) {
   df <- reactive({
     if (is_null(input$publications)) {
       anomalies %>% 
-        select(-platform) %>% 
+#        select(-platform) %>% 
         right_join(urls %>% 
                      filter(platform %in% c("Hypotheses.org", "Revues.org", "OpenEdition Books", "Calenda")[c(input$hypotheses, input$revues, input$books, input$calenda)]), 
                    by = c("url" = "id")) %>% 
         left_join(publications, by = c("site_url", "platform")) %>% 
-        select(platform, site_titre, naked_titre, url, fit_sigma_ratio) %>% 
-        arrange(desc(fit_sigma_ratio)) %>% 
-        mutate(fit_sigma_ratio = round(fit_sigma_ratio)) %>% 
-        rename(Plateforme = platform, Publication = site_titre, Document = naked_titre, URL = url, intensité = fit_sigma_ratio)
+        select(platform, site_titre, naked_titre, url, value, date) %>% 
+        arrange(desc(value)) %>% 
+        filter(value >= input$seuil * max(anomalies$value, na.rm = TRUE)) %>% 
+        mutate(value = round(value)) %>% 
+        rename(Plateforme = platform, Publication = site_titre, Document = naked_titre, URL = url, Date = date, intensité = value) 
     } else {
       anomalies %>% 
-        select(-platform) %>% 
+#        select(-platform) %>% 
         right_join(
           urls %>% 
             filter(site_url %in% input$publications),
           by = c("url" = "id")
         ) %>% 
         left_join(publications, by = c("site_url", "platform")) %>% 
-        select(platform, site_titre, naked_titre, url, fit_sigma_ratio) %>% 
-        arrange(desc(fit_sigma_ratio)) %>% 
-        mutate(fit_sigma_ratio = round(fit_sigma_ratio)) %>% 
-        rename(Plateforme = platform, Publication = site_titre, Document = naked_titre, URL = url, intensité = fit_sigma_ratio)
+        select(platform, site_titre, naked_titre, url, value, date) %>% 
+        arrange(desc(value)) %>% 
+        filter(value >= input$seuil * max(anomalies$value, na.rm = TRUE)) %>% 
+        mutate(value = round(value)) %>% 
+        rename(Plateforme = platform, Publication = site_titre, Document = naked_titre, URL = url, Date = date, intensité = value)
     }
   })
   
   output$episode <- DT::renderDataTable({
-    df()
+    DT::datatable(df(), 
+                  selection = "single",
+                  options = list(language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/French.json'))
+                  ) %>% 
+      DT::formatDate("Date", method = 'toLocaleDateString', params = list('fr-FR'))
   },
-  server = TRUE,
-  selection = "single")
+  server = TRUE)
   
   observe({
     if (!is.null(input$episode_rows_selected)) {
@@ -62,7 +67,7 @@ shinyServer(function(input, output, session) {
       
       
       tmp <- m_render(system.file("application/dashboard.Rmd", package = "detectR"), 
-                      output_file = paste0("/data/dashboards/dashboard_", digest::sha1(df()[input$episode_rows_selected, "URL"]), "_", as.character(input$periode[1]), "_", as.character(input$periode[2]), ".html"),
+                      output_file = paste0("/srv/shiny-server/detectR/rapports/dashboards/dashboard_", digest::sha1(df()[input$episode_rows_selected, "URL"]), "_", as.character(input$periode[1]), "_", as.character(input$periode[2]), ".html"),
                       params = list(periode_start = as.character(input$date[1]),
                                     periode_end = as.character(input$date[2]),
                                     url = df()[input$episode_rows_selected, "URL"]
@@ -80,14 +85,9 @@ shinyServer(function(input, output, session) {
   })
   
   output$dashboard <- renderUI({
-    withProgress(message = "affichage du dashboard en cours...", value = 0.1, {
-      tmp <- tempfile()
-      setProgress(value = 0.2, message = paste0("écriture sur", tmp))
-      writeChar(httr::GET(paste0("http://localhost:", port, "/", sub("/data/", "", path()))) %>% content(as = "text"), con = tmp)
-      includeHTML(tmp)
       setProgress(value = 1)
+      tags$iframe(src=path(), height=600, width=535)
     })
-  })
-  
+
   
 })
