@@ -28,10 +28,19 @@ library(tidyverse)
 
 ```{r}
 
-df_visites <- GET(paste0("http://localhost:6666/get_visits?visited_url=", params$url, "&from=", params$periode_start, "&to=", params$periode_end)) %>% 
-  content(as = "text") %>% 
-  jsonlite::fromJSON() %>% 
-  as_tibble()
+# df_visites <- GET(paste0("http://localhost:6666/get_visits?visited_url=", params$url, "&from=", params$periode_start, "&to=", params$periode_end)) %>% 
+#   content(as = "text") %>% 
+#   jsonlite::fromJSON() %>% 
+#   as_tibble()
+monetdb <- config::get("monetdb", file = "~/detectR/inst/API/config.yml")
+conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
+                     embedded = monetdb$embedded)
+
+df_visites <- get_visits(conn, visited_urls = params$url, from = params$periode_start, to = params$periode_end)
+
+pool::poolClose(conn)
+MonetDBLite::monetdblite_shutdown()
+
 df_visites$date <- lubridate::ymd(df_visites$date)
 df_visites <- xts::xts(df_visites$n, order.by = df_visites$date)
 
