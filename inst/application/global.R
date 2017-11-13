@@ -20,31 +20,22 @@ m_get_metadata <- memoise(get_metadata, cache = fc)
 
 publications <- m_solr_facet(q = "*:*", facet.pivot = c("platform", "site_url", "site_titre"), facet.limit = -1)$facet_pivot$`platform,site_url,site_titre` %>% unnest()
 
-# lauching APIs - asynchronously!
-library(plumber)
-r <- plumber::plumb(system.file("API/APIs.R", package = "detectR"))
-port <- sample(1000:9999, 1)
-zzz %<-% {r$run(port = port)}
 
+anomalies <- httr::GET(paste0("http://localhost:6666/get_outliers?from=", "2017-01-01", "&to=", Sys.Date())) %>% 
+  httr::content(as = "text") %>% 
+  jsonlite::fromJSON(simplifyDataFrame=TRUE) %>% 
+  as_tibble()
 
-# load("./data/anomaly_detection.Rdata")
-# anomaly_detection$url_prediction_anomalies <- anomaly_detection$url_prediction_anomalies %>% 
-#   mutate(url = paste0("http://", url))
-
-# anomalies <- read_csv("/data/main_anomalies.csv")
-# scheme(anomalies$url) <- "http"
-
-anomalies <- httr::GET(paste0("http://localhost:", port, "/get_outliers?from=", "2017-01-01", "&to=", Sys.Date())) %>% httr::content(as = "parsed")
 
 
 
 load_urls <- function() {
   urls <- anomalies %>%
     group_by(url) %>%
-    arrange(-fit_sigma_ratio) %>%
+    arrange(desc(value)) %>%
     slice(1) %>%
     ungroup %>%
-    arrange(-fit_sigma_ratio) %>% 
+    arrange(desc(value)) %>% 
     mutate(url = if_else(stringr::str_detect(url, "http://"), url, paste0("http://", url)))
   m_get_metadata(urls = urls$url, 
                  fields = c("id", "platform", "site_url", "naked_titre"),
