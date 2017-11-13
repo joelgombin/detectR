@@ -73,4 +73,5 @@ file.copy(monetdb$embedded, "/data/monetdb_backup/", recursive = TRUE, overwrite
 
 poolClose(conn1)
 poolClose(conn2)
+monetdblite_shutdown()
 message(Sys.time(), "\n")
