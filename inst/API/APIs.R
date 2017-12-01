@@ -3,7 +3,10 @@ library(tidyverse)
 #* @get /get_visits
 get_visits <- function(visited_urls = NULL, from = "2017-01-01", to = "2017-08-01") {
   monetdb <- config::get("monetdb", file = "~/detectR/inst/API/config.yml")
-  on.exit({pool::poolClose(conn)})
+  on.exit({
+    pool::poolClose(conn)
+    MonetDBLite::monetdblite_shutdown()
+    })
   conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
                   embedded = monetdb$embedded)
 
@@ -17,14 +20,16 @@ get_visits <- function(visited_urls = NULL, from = "2017-01-01", to = "2017-08-0
 #* @get /get_outliers
 get_outliers <- function(from = "2017-01-01", to = "2017-08-01") {
   monetdb <- config::get("monetdb", file = "~/detectR/inst/API/config.yml")
-  on.exit({pool::poolClose(conn)})
+  on.exit({
+    pool::poolClose(conn)
+    MonetDBLite::monetdblite_shutdown()
+  })
   conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
                  embedded = monetdb$embedded)
   date <- "date"
   request <- glue::glue_sql("SELECT * FROM url_prediction_anomalies WHERE {`date`} >= {from} AND {`date`} <= {to}", .con = conn)
   tmp <- tibble::as_tibble(DBI::dbGetQuery(conn, request))
   return(tmp)
-#  pool::poolClose(conn)
 }
 
 #* @assets /data/dashboards /dashboards
