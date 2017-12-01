@@ -37,9 +37,7 @@ get_metadata_chunk <- function(urls, fields = c("id", "url", "naked_titre"), bac
 #' @param sleep_time how long (in seconds) the function should wait before two API calls. Be gentle to the backend!
 #' @param step how many values should be sent to the API at once (an integer). Advised value is 500; choosing a higher value may lead to getting errors 400.
 #' @param backend the solr backend
-#' 
-#' value a tibble, with as many rows as there are elements in `urls`. 
-#' 
+#' @return a tibble, with as many rows as there are elements in `urls`. 
 #' @export
 #' @importFrom magrittr %>%
 get_metadata <- function(urls, fields = c("id", "url", "naked_titre"), sleep_time = 0.05, step = 500, backend = "http://147.94.102.65:8983/solr/documents/select") {
