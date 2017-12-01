@@ -17,9 +17,10 @@ get_metadata(urls, fields = c("id", "url", "naked_titre"),
 
 \item{step}{how many values should be sent to the API at once (an integer). Advised value is 500; choosing a higher value may lead to getting errors 400.}
 
-\item{backend}{the solr backend
-
-value a tibble, with as many rows as there are elements in \code{urls}.}
+\item{backend}{the solr backend}
+}
+\value{
+a tibble, with as many rows as there are elements in \code{urls}.
 }
 \description{
 Get the metadata from the solr backends from a selection of urls

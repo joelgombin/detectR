@@ -4,8 +4,8 @@
 \alias{get_visits}
 \title{Get number of visits for a given URL}
 \usage{
-get_visits(conn, table = "all_actions", visited_urls = NULL,
-  from = Sys.Date(), to = Sys.Date())
+get_visits(conn, table = "visites_par_jour", visited_urls = NULL,
+  from = "2017-01-01", to = Sys.Date())
 }
 \arguments{
 \item{conn}{a connection to the database from which the data is retrieved}
