@@ -7,6 +7,7 @@ output:
 params:
   periode_start: !r lubridate::ymd("2017-01-01")
   periode_end: !r lubridate::ymd(Sys.Date())
+  date_episode: !r lubridate::ymd("2017-03-23")
   url: http://chrhc.revues.org/1907
 
   
@@ -19,6 +20,12 @@ library(highcharter)
 library(memoise)
 library(detectR)
 library(httr)
+library(countrycode)
+library(nominatim)
+library(sf)
+library(leaflet)
+library(ggplot2)
+library(hrbrthemes)
 library(tidyverse)
 ```
 
@@ -50,25 +57,115 @@ df_visites <- xts::xts(df_visites$n, order.by = df_visites$date)
 #                                  backend = tbl_all_actions)
 #       
 
-df_anomalies <- anomalies %>% 
-  filter(url %in% params$url) %>% 
-  mutate(title = "!", text = "Épisode de lecteurs inattendus")
-# df_anomalies <- xts::xts(df_anomalies$real_visitors, order.by = df_anomalies$date)
-
-
-
 
 highchart(type = "stock") %>%
-  hc_add_series(df_visites, id = "visites") %>%
-  hc_add_series(df_anomalies, hcaes(x = date), type = "flags", onSeries = "visites")
+  hc_add_series(df_visites, id = "visites")
 
 
 ```
 
 
 
-### Que sait-on du document concerné ?
+### Par où sont arrivés les lecteurs inattendus ? Les referers
+
+```{r, fig.width=10, fig.height=6}
+monetdb <- config::get("monetdb", file = "~/detectR/inst/API/config.yml")
+conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
+                     embedded = monetdb$embedded)
+
+logs_par_referer_inattendu <- tbl(conn, "all_actions") %>% 
+  filter(url %in% params$url, date %in% params$date_episode) %>% 
+  count(referer_name) %>% 
+  collect() %>% 
+  mutate(p = n / sum(n) * 100) 
+
+logs_par_referer_habituel <- tbl(conn, "all_actions") %>% 
+  filter(url %in% params$url) %>% 
+  count(referer_name) %>% 
+  collect() %>% 
+  mutate(p = n / sum(n) * 100)
+
+
+pool::poolClose(conn)
+MonetDBLite::monetdblite_shutdown()
+
+logs_par_referer <- bind_rows(habituel = logs_par_referer_habituel, inattendu = logs_par_referer_inattendu, .id = "referer")
+
+
+logs_par_referer %>% 
+  arrange(p) %>% 
+  filter(!is.na(referer_name)) %>% 
+  mutate(referer_name = factor(referer_name, levels = unique(referer_name))) %>% 
+  ggplot(aes(x = referer_name, y = p)) +
+  geom_bar(aes(fill = referer), stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  theme_ipsum(grid = "X") +
+  labs(y = "en % des visites",  x = "")
+
+```
+
 
 ### D'où viennent les lecteurs inattendus ? 
 
+```{r}
+monetdb <- config::get("monetdb", file = "~/detectR/inst/API/config.yml")
+conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
+                     embedded = monetdb$embedded)
+
+logs_par_pays <- tbl(conn, "all_actions") %>% 
+  filter(url %in% params$url, date %in% params$date_episode) %>% 
+  count(location_country) %>% 
+  collect()
+
+pool::poolClose(conn)
+MonetDBLite::monetdblite_shutdown()
+
+countries <- read_tsv(system.file("extdata/country_centroids_all.csv", package = "detectR"))
+
+logs_par_pays %>% 
+  mutate(pays = countrycode(location_country, "iso2c", "country.name.fr")) %>% 
+  mutate(location_country = toupper(location_country)) %>% 
+  left_join(countries, by = c("location_country" = "ISO3136")) %>% 
+  filter(!is.na(LONG)) %>% 
+  st_as_sf(coords = c("LONG", "LAT"), 
+                 crs = 4326, agr = "constant") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircleMarkers(radius = ~sqrt(n), stroke = FALSE, fillOpacity = 0.5,
+                   popup = ~ paste0(pays, "<BR>", n, " consultations"))  
+  
+
+```
+
+### Habituellement, d'où viennent les lecteurs de ce document ?
+
+```{r}
+monetdb <- config::get("monetdb", file = "~/detectR/inst/API/config.yml")
+conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
+                     embedded = monetdb$embedded)
+
+logs_par_pays <- tbl(conn, "all_actions") %>% 
+  filter(url %in% params$url) %>% 
+  count(location_country) %>% 
+  collect()
+
+pool::poolClose(conn)
+MonetDBLite::monetdblite_shutdown()
+
+countries <- read_tsv(system.file("extdata/country_centroids_all.csv", package = "detectR"))
+
+logs_par_pays %>% 
+  mutate(pays = countrycode(location_country, "iso2c", "country.name.fr")) %>% 
+  mutate(location_country = toupper(location_country)) %>% 
+  left_join(countries, by = c("location_country" = "ISO3136")) %>% 
+  filter(!is.na(LONG)) %>% 
+  st_as_sf(coords = c("LONG", "LAT"), 
+                 crs = 4326, agr = "constant") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircleMarkers(radius = ~sqrt(n), stroke = FALSE, fillOpacity = 0.5,
+                   popup = ~ paste0(pays, "<BR>", n, " consultations"))  
+  
+
+```
 
