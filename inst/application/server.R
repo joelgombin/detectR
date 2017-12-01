@@ -65,17 +65,27 @@ shinyServer(function(input, output, session) {
   path <- eventReactive(input$go, {
     withProgress(message = "Préparation de l'explorateur", value = 0.5, expr = {
       
+#      cat(str(df()), "\\n")
+      cat(df() %>% slice(input$episode_rows_selected) %>% pull("Date"), "\n")
+      cat(df() %>% slice(input$episode_rows_selected) %>% pull("URL"), "\n")
+      cat(as.character(input$periode[1]), "\n")
+      cat(as.character(input$periode[2]), "\n")
+      # cat(periode_start = as.character(input$date[1]), "\\n")
+      # cat(periode_end = as.character(input$date[2]), "\\n")
+      # cat(date_episode = df()[input$episode_rows_selected, "Date"], "\\n")
+      # cat(url = df()[input$episode_rows_selected, "URL"], "\\n")
       
       tmp <- m_render(system.file("application/dashboard.Rmd", package = "detectR"), 
                       output_file = paste0("/srv/shiny-server/detectR/rapports/dashboards/dashboard_", digest::sha1(df()[input$episode_rows_selected, "URL"]), "_", as.character(input$periode[1]), "_", as.character(input$periode[2]), ".html"),
-                      params = list(periode_start = as.character(input$date[1]),
-                                    periode_end = as.character(input$date[2]),
-                                    url = df()[input$episode_rows_selected, "URL"]
+                      params = list(periode_start = as.character(input$periode[1]),
+                                    periode_end = as.character(input$periode[2]),
+                                    date_episode = df() %>% slice(input$episode_rows_selected) %>% pull("Date"),
+                                    url = df() %>% slice(input$episode_rows_selected) %>% pull("URL")
                       )
       )
       setProgress(1)
     })
-    return(tmp)
+    return(paste0("https://shiny.labocleo.org/detectR/rapports/dashboards/dashboard_", digest::sha1(df()[input$episode_rows_selected, "URL"]), "_", as.character(input$periode[1]), "_", as.character(input$periode[2]), ".html"))
   })
   
   observeEvent(input$go, {
