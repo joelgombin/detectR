@@ -1,0 +1,2 @@
+NB : le dossier exposé sur https://shiny.labocleo.org/ est /srv/shiny-server
+=> c'est là bas qu'il faut aller loger les pages html à embedder en iframe.

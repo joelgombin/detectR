@@ -8,9 +8,11 @@ validate_url(urls, logical = FALSE)
 }
 \arguments{
 \item{urls}{a vector of urls}
+
+\item{logical}{should the function return a vector of logical values?}
 }
 \value{
-a vector containing only the valid urls
+a vector containing only the valid urls, or a vector of logical values
 }
 \description{
 Validate that the url is a valid url

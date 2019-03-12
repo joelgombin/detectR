@@ -4,12 +4,14 @@
 \alias{get_tbl_visits}
 \title{get the table about visits}
 \usage{
-get_tbl_visits(conn, from)
+get_tbl_visits(conn, from, to = Sys.Date() - 1)
 }
 \arguments{
 \item{conn}{a connection to the relevant DB}
 
-\item{from}{the visit ID to start from}
+\item{from}{the date from which to extract data}
+
+\item{to}{the date to which to extract data}
 }
 \description{
 get the table about visits

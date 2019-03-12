@@ -7,7 +7,6 @@
 #' 
 #' value a tibble, with as many rows as there are elements in `urls`. 
 #' 
-#' @export
 #' @importFrom magrittr %>%
 get_metadata_chunk <- function(urls, fields = c("id", "url", "naked_titre"), backend, .pb = NULL) {
   if ((!is.null(.pb)) && inherits(.pb, "Progress") && (.pb$i < .pb$n)) .pb$tick()$print()
@@ -23,10 +22,7 @@ get_metadata_chunk <- function(urls, fields = c("id", "url", "naked_titre"), bac
   }
   result <- result %>%
     httr::content("text") %>%
-    readr::read_csv(col_types = readr::cols(datepubli = readr::col_character(),
-                                     datepublipapier = readr::col_character(),
-                                     datemisenligne = readr::col_character(),
-                                     dateacceslibre = readr::col_character()))
+    readr::read_csv()
   result[match(urls, result$id),]
 }
 
@@ -43,6 +39,14 @@ get_metadata_chunk <- function(urls, fields = c("id", "url", "naked_titre"), bac
 get_metadata <- function(urls, fields = c("id", "url", "naked_titre"), sleep_time = 0.05, step = 500, backend = "http://147.94.102.65:8983/solr/documents/select") {
   urls <- gsub('\\\\', "", urls)
   urls <- gsub('"', "", urls)
+  index <- which(grepl("revues.org", urls, fixed = TRUE))
+  if (length(index) > 0) {
+    urls[index] <- urls[index] %>% 
+      str_match("^http://([^.]+).revues.org/([0-9]+)$") %>% 
+      dplyr::as_data_frame() %>% 
+      dplyr::mutate(url = paste0("http://journals.openedition.org/", V2, "/", V3)) %>% 
+      dplyr::pull(url)
+  }
   pb <- dplyr::progress_estimated(length(urls) %/% step)
   purrr::map2_df(
     seq(1, length(urls), by = step), 

@@ -1,8 +1,8 @@
 Package: detectR
 Title: Unexpected reader detectR
 Version: 0.0.0.9000
-Authors@R: c(person("Joël", "Gombin", email = "joel.gombin@gmail.com", role = "aut"),
-             person("Pierre-Carl", "Langlais", email = "pierrecarl.langlais@gmail.com", role = c("aut", "cre")),
+Authors@R: c(person("Joël", "Gombin", email = "joel.gombin@gmail.com", role = c("aut", "cre")),
+             person("Pierre-Carl", "Langlais", email = "pierrecarl.langlais@gmail.com", role = "aut"),
              person("OpenEdition", role = "cph"))
 Description: This package provides functions to detect unexpected peaks of visits in a corpus of logs. // Ce package fournit des fonctions pour détecter, dans un corpus de statistiques de fréquentation de documents, des pics inattendus de visites. 
 Depends: R (>= 3.3.0)
@@ -21,6 +21,8 @@ Imports: stats,
     Hmisc,
     DBI,
     pool,
+    rex,
+    progress
 Suggests: flexdashboard,
     knitr,
     rmarkdown,

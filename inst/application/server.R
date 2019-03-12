@@ -16,7 +16,7 @@ shinyServer(function(input, output, session) {
       anomalies %>% 
 #        select(-platform) %>% 
         right_join(urls %>% 
-                     filter(platform %in% c("Hypotheses.org", "Revues.org", "OpenEdition Books", "Calenda")[c(input$hypotheses, input$revues, input$books, input$calenda)]), 
+                     filter(platform %in% c("Hypotheses.org", "OpenEdition Journals", "OpenEdition Books", "Calenda")[c(input$hypotheses, input$revues, input$books, input$calenda)]), 
                    by = c("url" = "id")) %>% 
         left_join(publications, by = c("site_url", "platform")) %>% 
         select(platform, site_titre, naked_titre, url, value, date) %>% 
@@ -76,16 +76,16 @@ shinyServer(function(input, output, session) {
       # cat(url = df()[input$episode_rows_selected, "URL"], "\\n")
       
       tmp <- m_render(system.file("application/dashboard.Rmd", package = "detectR"), 
-                      output_file = paste0("/srv/shiny-server/detectR/rapports/dashboards/dashboard_", digest::sha1(df()[input$episode_rows_selected, "URL"]), "_", as.character(input$periode[1]), "_", as.character(input$periode[2]), ".html"),
+                      output_file = paste0("/srv/shiny-server/umberto/rapports/dashboards/dashboard_", digest::sha1(df()[input$episode_rows_selected, "URL"]), "_", as.character(input$periode[1]), "_", as.character(input$periode[2]), ".html"),
                       params = list(periode_start = as.character(input$periode[1]),
                                     periode_end = as.character(input$periode[2]),
-                                    date_episode = df() %>% slice(input$episode_rows_selected) %>% pull("Date"),
+                                    date_episode = as.Date(df() %>% slice(input$episode_rows_selected) %>% pull("Date")),
                                     url = df() %>% slice(input$episode_rows_selected) %>% pull("URL")
                       )
       )
       setProgress(1)
     })
-    return(paste0("https://shiny.labocleo.org/detectR/rapports/dashboards/dashboard_", digest::sha1(df()[input$episode_rows_selected, "URL"]), "_", as.character(input$periode[1]), "_", as.character(input$periode[2]), ".html"))
+    return(paste0("https://shiny.labocleo.org/umberto/rapports/dashboards/dashboard_", digest::sha1(df()[input$episode_rows_selected, "URL"]), "_", as.character(input$periode[1]), "_", as.character(input$periode[2]), ".html")) # à vérifier
   })
   
   observeEvent(input$go, {

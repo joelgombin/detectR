@@ -4,14 +4,23 @@
 \alias{extract_and_load}
 \title{Extract from a given DB and load into another DB}
 \usage{
-extract_and_load(conn1, conn2, from, progress = TRUE)
+extract_and_load(conn1, conn2, from, to = Sys.Date() - 1, progress = TRUE,
+  append = TRUE, forbid_duplicate = TRUE)
 }
 \arguments{
 \item{conn1}{a connection to the first database.}
 
 \item{conn2}{a connection to the second database.}
 
+\item{from}{the date from which to extract data}
+
+\item{to}{the date to which to extract data}
+
 \item{progress}{whether a progress bar should be shown.}
+
+\item{append}{if TRUE, new data is appended to previous data. If FALSE, new data overwrites previous data.}
+
+\item{forbid_duplicate}{if \code{TRUE} (default), data won't be written when the target database already has data for a given date.}
 }
 \description{
 Extract from a given DB and load into another DB

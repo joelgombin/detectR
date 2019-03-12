@@ -3,7 +3,7 @@
 function(request) {
   fluidPage(
     useShinyjs(),  # Include shinyjs
-    title = "Détecteur de lecteurs inattendus",
+    title = "Umberto - Détecteur de lecteurs inattendus",
     theme = "style.css",
     titlePanel(title = div(img(src = "./img/openedition_72dpi.png", width = 200), br(),  "Bienvenue dans le détecteur de lecteurs inattendus !")),
     sidebarLayout(

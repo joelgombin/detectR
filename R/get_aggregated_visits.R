@@ -22,7 +22,7 @@ get_aggregated_visites <- function(tbl_visites, absolute_days=10, relative_days=
     dplyr::group_by(url) %>%
     dplyr::summarise(days_covered = n(), min_date = as.Date(min(date))) %>%
     dplyr::filter(days_covered > absolute_days) %>%
-    dplyr::mutate(period_covered = as.numeric(max_absolute_date - min_date)) %>%
+    dplyr::mutate(period_covered = as.integer(max_absolute_date - min_date)) %>%
     dplyr::mutate(date_prop = days_covered / period_covered) %>%
     dplyr::filter(date_prop > relative_days)
   

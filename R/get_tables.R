@@ -1,47 +1,55 @@
 #' get the table about visits
 #' @param conn a connection to the relevant DB
-#' @param from the visit ID to start from
+#' @inheritParams extract_and_load
+#' @export
 
-get_tbl_visits <- function(conn, from) {
-  # log_visit <- dplyr::tbl(conn, "log_visit")
-  # visites <- log_visit %>% 
-  #   dplyr::select(idvisit, visit_last_action_time, visit_first_action_time, visit_total_actions, referer_type, referer_name, referer_url, referer_keyword, location_browser_lang, config_browser_name, config_device_type, config_os, config_os_version, visitor_localtime, config_resolution, visit_total_time, location_city, location_country) %>% 
-  #   dplyr::filter(idvisit > from) %>% 
-  #   dplyr::collect()
-  # if (inherits(conn, "Pool")) {
-  #   conn <- pool::poolCheckout(conn)
-  #   comes_from_pool <- TRUE
-  # } else {
-  #   comes_from_pool <-FALSE
-  # }
+get_tbl_visits <- function(conn, from, to = Sys.Date() - 1) {
   
-  visites <- DBI::dbGetQuery(conn, pool::sqlInterpolate(conn, "SELECT  `idvisit` AS `idvisit`, `visit_last_action_time` AS `visit_last_action_time`, `visit_first_action_time` AS `visit_first_action_time`, `visit_total_actions` AS `visit_total_actions`, `referer_type` AS `referer_type`, `referer_name` AS `referer_name`, `referer_url` AS `referer_url`, `referer_keyword` AS `referer_keyword`, `location_browser_lang` AS `location_browser_lang`, `config_browser_name` AS `config_browser_name`, `config_device_type` AS `config_device_type`, `config_os` AS `config_os`, `config_os_version` AS `config_os_version`, `visitor_localtime` AS `visitor_localtime`, `config_resolution` AS `config_resolution`, `visit_total_time` AS `visit_total_time`, `location_city` AS `location_city`, `location_country` AS `location_country` FROM `log_visit` WHERE (`idvisit` > ?from)", from = from))
-  # DBI::dbBind(visites, list(from))
-  # DBI::dbFetch(visites)
-  # DBI::dbClearResult(visites)
+  query <- pool::sqlInterpolate(conn, 
+                                "SELECT  `idvisit` AS `idvisit`,
+                                CONV(HEX(idvisitor), 16, 10) AS `idvisitor`,
+                                `visit_last_action_time` AS `visit_last_action_time`,
+                                `visit_first_action_time` AS `visit_first_action_time`,
+                                DATE(`visit_first_action_time`) AS `date`, 
+                                inet_ntoa(conv(hex(location_ip), 16, 10)) as ip,
+                                `visit_total_actions` AS `visit_total_actions`, 
+                                `visitor_count_visits` AS `visitor_count_visits`,
+                                `visit_entry_idaction_name` AS `visit_entry_idaction_name`,
+                                `visit_entry_idaction_url` AS `visit_entry_idaction_url`,
+                                `visit_exit_idaction_name` AS `visit_exit_idaction_name`,
+                                `visit_exit_idaction_url` AS `visit_exit_idaction_url`,
+                                `referer_type` AS `referer_type`, 
+                                `referer_name` AS `referer_name`, 
+                                `referer_url` AS `referer_url`, 
+                                `referer_keyword` AS `referer_keyword`, 
+                                `location_browser_lang` AS `location_browser_lang`, 
+                                `config_browser_name` AS `config_browser_name`, 
+                                `config_device_type` AS `config_device_type`, 
+                                `config_os` AS `config_os`, 
+                                `config_os_version` AS `config_os_version`, 
+                                `visitor_localtime` AS `visitor_localtime`, 
+                                `config_resolution` AS `config_resolution`, 
+                                `visit_total_time` AS `visit_total_time`, 
+                                `location_city` AS `location_city`, 
+                                `location_country` AS `location_country`,
+                                `location_latitude` AS `location_latitude`,
+                                `location_longitude` AS `location_longitude`
+                                FROM `log_visit` 
+                                WHERE (`visit_first_action_time` BETWEEN ?from and ?to)",
+                                from = as.character(from),
+                                to = as.character(to))
   
-  # if (comes_from_pool) {
-  #   pool::poolReturn(conn)
-  # }
-  
+  visites <- DBI::dbGetQuery(conn, query, n = Inf)
   visites <- tibble::as_tibble(visites)
-  
-  visites <- visites %>% 
-    mutate(idvisit = as.double(idvisit),
-           visit_last_action_time = as.character(visit_last_action_time),
-           visit_first_action_time = as.character(visit_first_action_time),
-           visit_total_actions = as.double(visit_total_actions),
-           referer_type = as.double(referer_type),
-           visitor_localtime = as.character(visitor_localtime),
-           visit_total_time = as.double(visit_total_time)) 
   
   return(visites)
 }
 
+
 #' get the table about actions
 #' @inheritParams get_visits
 #' @param from the action ID to start from
-
+#' @export
 get_tbl_actions <- function(conn, from) {
   # log_action <- dplyr::tbl(conn, "log_action")
   # actions <- log_action %>% 
@@ -63,6 +71,7 @@ get_tbl_actions <- function(conn, from) {
 
 #' get the table linking visits and actions
 #' @inheritParams get_visits
+#' @export
 
 get_tbl_visit_actions <- function(conn, from) {
   # log_link_visit_action <- dplyr::tbl(conn, "log_link_visit_action")
@@ -91,6 +100,7 @@ get_tbl_visit_actions <- function(conn, from) {
 #' @param tbl_visites a table containing the visits
 #' @param tbl_actions a table containing the actions
 #' @param tbl_visites_actions a table linking visits and actions
+#' @export
 
 get_tbl_all_actions <- function(tbl_visites, tbl_actions, tbl_visites_actions) {
   # a regex for cleaning domain names
@@ -159,32 +169,42 @@ get_tbl_all_actions <- function(tbl_visites, tbl_actions, tbl_visites_actions) {
 #' 
 #' @param conn1 a connection to the first database.
 #' @param conn2 a connection to the second database.
+#' @param from the date from which to extract data
+#' @param to the date to which to extract data 
+#' @param append if TRUE, new data is appended to previous data. If FALSE, new data overwrites previous data.
 #' @inheritParams get_visits
 #' @param progress whether a progress bar should be shown.
+#' @param forbid_duplicate if `TRUE` (default), data won't be written when the target database already has data for a given date. 
 #' @export
 #' @import utils
 #' 
-extract_and_load <- function(conn1, conn2, from, progress = TRUE) {
+extract_and_load <- function(conn1, conn2, from, to = Sys.Date() - 1, progress = TRUE, append = TRUE, forbid_duplicate = TRUE) {
+  
+  # vérifier qu'on n'écrit pas des données en double
+  
+  if (append & forbid_duplicate & dplyr::tbl(conn2, "all_actions") %>% filter(date >= from, date < to) %>% summarise(n = n()) %>% pull(n) > 0) {
+    stop("Des données sont déjà renseignées pour ces dates. Rien n'a été écrit.")
+  }
+  
   if (progress) pb <- txtProgressBar(style = 3)
   
-  tbl_visits <- get_tbl_visits(conn1, from = from)
+  tbl_visits <- get_tbl_visits(conn1, from = from, to = to)
   if (progress) setTxtProgressBar(pb, 0.1)
-  DBI::dbWriteTable(conn2, "visites", tbl_visits, append = TRUE)
+  DBI::dbWriteTable(conn2, "visites", tbl_visits, append = append, overwrite = !append)
   if (progress) setTxtProgressBar(pb, 0.2)
   
   tbl_actions <- get_tbl_actions(conn1, from = 0) # we need all actions, since they're not chronological
-  if (progress) setTxtProgressBar(pb, 0.3)
   DBI::dbWriteTable(conn2, "actions", tbl_actions, overwrite = TRUE)
   if (progress) setTxtProgressBar(pb, 0.4)
   
   tbl_visit_actions <- get_tbl_visit_actions(conn1, from = from)
   if (progress) setTxtProgressBar(pb, 0.5)
-  DBI::dbWriteTable(conn2, "visites_actions", tbl_visit_actions, append = TRUE)
+  DBI::dbWriteTable(conn2, "visites_actions", tbl_visit_actions, append = append, overwrite = !append)
   if (progress) setTxtProgressBar(pb, 0.6)
   
   tbl_all_actions <- get_tbl_all_actions(tbl_visits, tbl_actions, tbl_visit_actions)
   if (progress) setTxtProgressBar(pb, 0.8)
-  DBI::dbWriteTable(conn2, "all_actions", tbl_all_actions, append = TRUE)
+  DBI::dbWriteTable(conn2, "all_actions", tbl_all_actions, append = append, overwrite = !append)
   if (progress) setTxtProgressBar(pb, 1)
   if (progress) close(pb)
   return(dplyr::tbl(conn2, "all_actions") %>% arrange(desc(idvisit)))

@@ -14,7 +14,8 @@ get_calendar_time_series <- function(logs_board){
     dplyr::mutate(day_publication = lubridate::yday(date)) %>%
     dplyr::group_by(day_publication, date) %>%
     dplyr::summarise(mean_days = mean(nb_visits)) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>% 
+    dplyr::arrange(date)
   all_mean <- mean(all_per_day$mean_days)
   time_decomposition <- stats::decompose(stats::ts(all_per_day$mean_days, freq=7))
   fit_trend <- get_trend_model(time_decomposition, all_per_day)

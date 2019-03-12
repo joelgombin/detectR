@@ -1,22 +1,19 @@
 ---
-title: "Détecteur de lecteur inattendu"
 output:
   flexdashboard::flex_dashboard:
     storyboard: true
-    self_contained: false
 params:
   periode_start: !r lubridate::ymd("2017-01-01")
   periode_end: !r lubridate::ymd(Sys.Date())
   date_episode: !r lubridate::ymd("2017-03-23")
-  url: http://chrhc.revues.org/1907
-
-  
-  
+  url: http://journals.openedition.org/chrhc/1907
+  set_title: Hassan Fathy, construire *avec* ou *pour* le peuple ?
+title: "`r paste('Umberto -', params$set_title)`"
 ---
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
-library(highcharter)
+#library(highcharter)
 library(memoise)
 library(detectR)
 library(httr)
@@ -26,9 +23,9 @@ library(sf)
 library(leaflet)
 library(ggplot2)
 library(hrbrthemes)
+library(plotly)
 library(tidyverse)
 ```
-
 
 
 ### Combien de lecteurs inattendus ?
@@ -43,24 +40,35 @@ monetdb <- config::get("monetdb", file = "~/detectR/inst/API/config.yml")
 conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
                      embedded = monetdb$embedded)
 
-df_visites <- get_visits(conn, visited_urls = params$url, from = params$periode_start, to = params$periode_end)
+# df_visites <- get_visits(conn, visited_urls = params$url, from = params$periode_start, to = params$periode_end)
+df_visites <- tbl(conn, "visites_par_jour") %>% 
+  filter(url %in% params$url) %>% 
+  filter(date >= params$periode_start & date <= params$periode_end) %>% 
+  collect()
 
 pool::poolClose(conn)
 MonetDBLite::monetdblite_shutdown()
 
 df_visites$date <- lubridate::ymd(df_visites$date)
-df_visites <- xts::xts(df_visites$n, order.by = df_visites$date)
+# df_visites <- xts::xts(df_visites$n, order.by = df_visites$date)
+# 
+# # df_visites <- m_get_visits(df()[input$episode_rows_selected, "URL"], 
+# #                                  from = ymd(format(input$date[1])),
+# #                                  to = ymd(format(input$date[2])),
+# #                                  backend = tbl_all_actions)
+# #       
+# 
+# 
+# highchart(type = "stock") %>%
+#   hc_add_series(df_visites, id = "visites")
 
-# df_visites <- m_get_visits(df()[input$episode_rows_selected, "URL"], 
-#                                  from = ymd(format(input$date[1])),
-#                                  to = ymd(format(input$date[2])),
-#                                  backend = tbl_all_actions)
-#       
+p <- df_visites %>% 
+  ggplot(aes(x = date, y = n)) +
+  geom_line() +
+  theme_ipsum() +
+  labs(x = NULL, y = NULL)
 
-
-highchart(type = "stock") %>%
-  hc_add_series(df_visites, id = "visites")
-
+ggplotly(p)
 
 ```
 
@@ -73,14 +81,15 @@ monetdb <- config::get("monetdb", file = "~/detectR/inst/API/config.yml")
 conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
                      embedded = monetdb$embedded)
 
+url_cible <- unfix_revues_org(params$url)
 logs_par_referer_inattendu <- tbl(conn, "all_actions") %>% 
-  filter(url %in% params$url, date %in% params$date_episode) %>% 
+  filter(url %in% url_cible, date %in% params$date_episode) %>% 
   count(referer_name) %>% 
   collect() %>% 
   mutate(p = n / sum(n) * 100) 
 
 logs_par_referer_habituel <- tbl(conn, "all_actions") %>% 
-  filter(url %in% params$url) %>% 
+  filter(url %in% url_cible, !date %in% params$date_episode) %>% 
   count(referer_name) %>% 
   collect() %>% 
   mutate(p = n / sum(n) * 100)
@@ -92,7 +101,7 @@ MonetDBLite::monetdblite_shutdown()
 logs_par_referer <- bind_rows(habituel = logs_par_referer_habituel, inattendu = logs_par_referer_inattendu, .id = "referer")
 
 
-logs_par_referer %>% 
+p <- logs_par_referer %>% 
   arrange(p) %>% 
   filter(!is.na(referer_name)) %>% 
   mutate(referer_name = factor(referer_name, levels = unique(referer_name))) %>% 
@@ -102,6 +111,8 @@ logs_par_referer %>%
   theme_ipsum(grid = "X") +
   labs(y = "en % des visites",  x = "")
 
+
+ggplotly(p)
 ```
 
 
@@ -113,7 +124,7 @@ conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
                      embedded = monetdb$embedded)
 
 logs_par_pays <- tbl(conn, "all_actions") %>% 
-  filter(url %in% params$url, date %in% params$date_episode) %>% 
+  filter(url %in% url_cible, date %in% params$date_episode) %>% 
   count(location_country) %>% 
   collect()
 
@@ -123,7 +134,7 @@ MonetDBLite::monetdblite_shutdown()
 countries <- read_tsv(system.file("extdata/country_centroids_all.csv", package = "detectR"))
 
 logs_par_pays %>% 
-  mutate(pays = countrycode(location_country, "iso2c", "country.name.fr")) %>% 
+  mutate(pays = countrycode(location_country, "iso2c", "un.name.fr")) %>% 
   mutate(location_country = toupper(location_country)) %>% 
   left_join(countries, by = c("location_country" = "ISO3136")) %>% 
   filter(!is.na(LONG)) %>% 
@@ -145,7 +156,7 @@ conn <- pool::dbPool(drv = eval(parse(text = monetdb$drv)),
                      embedded = monetdb$embedded)
 
 logs_par_pays <- tbl(conn, "all_actions") %>% 
-  filter(url %in% params$url) %>% 
+  filter(url %in% url_cible) %>% 
   count(location_country) %>% 
   collect()
 
@@ -155,7 +166,7 @@ MonetDBLite::monetdblite_shutdown()
 countries <- read_tsv(system.file("extdata/country_centroids_all.csv", package = "detectR"))
 
 logs_par_pays %>% 
-  mutate(pays = countrycode(location_country, "iso2c", "country.name.fr")) %>% 
+  mutate(pays = countrycode(location_country, "iso2c", "un.name.fr")) %>% 
   mutate(location_country = toupper(location_country)) %>% 
   left_join(countries, by = c("location_country" = "ISO3136")) %>% 
   filter(!is.na(LONG)) %>% 
